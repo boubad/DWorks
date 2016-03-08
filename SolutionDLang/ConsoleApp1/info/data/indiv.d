@@ -5,6 +5,7 @@ import std.conv;
 import std.exception;
 /////////////////////////
 class Indiv(T=int,U=int) {
+	static assert((U.stringof == "int")||(U.stringof == "short") || (U.stringof == "long") || (U.stringof == "uint")||(U.stringof == "ushort") || (U.stringof == "ulong"));
 	private:
 		U _index;
 		T[] _data;
@@ -33,20 +34,28 @@ class Indiv(T=int,U=int) {
 				enforce(cast(int)icol < cast(int)_data.length);
 				return (_data[cast(int)icol]);
 			}
+		
 		double distance(const Indiv!(T,U) other) const
 		in {
 			assert(other._data.length == _data.length);
 		}out(result){
 			assert(result >= cast(T)0);
 		}body {
-			real s = 0;
-			immutable int n = _data.length;
-			for (int i = 0; i < n; ++i){
-				real t = _data[i] - other._data[i];
-				s += t * t;
-			}// i
+			real s = compute_distance(other);
 			return cast(double)s;
 		}// distance
+		void distance(Z)(in Indiv!(T,U) other, out Z resp) const
+			in {
+				assert(other._data.length == _data.length);
+			}body {
+				Z s = 0;
+				immutable int n = _data.length;
+				for (int i = 0; i < n; ++i){
+					Z t = cast(Z)(_data[i] - other._data[i]);
+					s += t * t;
+				}// i
+				resp = s;
+			}// distance
 	public:
 		override string toString() const {
 			string f = " %s %s";
@@ -76,6 +85,16 @@ class Indiv(T=int,U=int) {
 		override size_t toHash() const {
 			return (cast(size_t)_index);
 		}
+	private:
+		real compute_distance(const Indiv!(T,U) other) const {
+			real s = 0;
+			immutable int n = _data.length;
+			for (int i = 0; i < n; ++i){
+				real t = _data[i] - other._data[i];
+				s += t * t;
+			}// i
+			return (s);
+		}// compute_distance
 }// class Indiv(T,U)
 ///////////////////////
 unittest {
@@ -113,6 +132,12 @@ unittest {
 	assert(d1 == cast(double)125);
 	double d2 = ind2.distance(ind1);
 	assert(d1 == d2);
+	///////////////////////////////////////
+	int nd1, nd2;
+	ind1.distance(ind2,nd1);
+	assert(nd1 == cast(int)125);
+	ind2.distance(ind1,nd2);
+	assert(nd1 == nd2);
 	//////////////////////////////////////
 	immutable int xIndex3 = 10;
 	auto ind11 = new Indiv!(int,int)(xIndex1,[7,8,9]);
