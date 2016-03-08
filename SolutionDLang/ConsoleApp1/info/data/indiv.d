@@ -2,7 +2,6 @@ module info.data.indiv;
 ////////////////////////////
 import std.string;
 import std.conv;
-import std.format;
 import std.exception;
 /////////////////////////
 class Indiv(T=int,U=int) {
@@ -50,8 +49,9 @@ class Indiv(T=int,U=int) {
 		}// distance
 	public:
 		override string toString() const {
-			//return format("%s",_index);
-			return "";
+			string f = " %s %s";
+			return format(f,_index,_data);
+			//return "";
 		}// toString
 		override bool opEquals(Object o) const {
 			auto rhs = cast(const Indiv!(T,U))o;
