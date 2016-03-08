@@ -3,6 +3,8 @@ module info.data.indiv;
 import std.string;
 import std.conv;
 import std.exception;
+import std.array : appender;
+import std.format : formattedWrite;
 /////////////////////////
 class Indiv(T=int,U=int) {
 	static assert((U.stringof == "int")||(U.stringof == "short") || (U.stringof == "long") || (U.stringof == "uint")||(U.stringof == "ushort") || (U.stringof == "ulong"));
@@ -58,9 +60,17 @@ class Indiv(T=int,U=int) {
 			}// distance
 	public:
 		override string toString() const {
-			string f = " %s %s";
-			return format(f,_index,_data);
-			//return "";
+			immutable n = _data.length;
+			auto writer = appender!string();
+			formattedWrite(writer,"%s\t[",_index);
+			for (int i = 0; i < n; ++i){
+				if (i > 0){
+					formattedWrite(writer,", ");
+				}
+				formattedWrite(writer,"%s",_data[i]);
+			}// i
+			formattedWrite(writer,"]");
+			return writer.data;
 		}// toString
 		override bool opEquals(Object o) const {
 			auto rhs = cast(const Indiv!(T,U))o;
@@ -151,6 +161,9 @@ unittest {
 	assert(ind1.toHash() == ind1.index);
 	assert(ind2.toHash() == ind2.index);
 	assert(ind11.toHash() == ind11.index);
+	/////////////////////////////////////
+	string sOut = "100\t[0, 1, 2, 3, 4]";
+	assert(ind1.toString() == sOut);
 }// unittest
 //////////////////////
 //eof: indiv.d

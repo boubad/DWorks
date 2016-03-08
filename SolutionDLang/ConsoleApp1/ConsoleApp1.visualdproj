@@ -208,6 +208,7 @@
   <Folder name="info">
    <Folder name="data">
     <File path="info\data\indiv.d" />
+    <File path="info\data\matdata.d" />
    </Folder>
   </Folder>
   <File path="main.d" />
