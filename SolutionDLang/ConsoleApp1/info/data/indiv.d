@@ -37,6 +37,9 @@ class Indiv(T=int,U=int) {
 		bool is_valid() const @property { return ((_index >= 0) && (_data.length >= 0));}
 		U index() const @property { return _index;}
 		U size() const @property { return _data.length;}
+		void clear_data(){
+			this._data = [];
+		}
 		@property T[] value() const {
 			return _data.dup;
 		}
@@ -187,6 +190,10 @@ unittest {
 	/////////////////////////////////////
 	string sOut = "100\t[0, 1, 2, 3, 4]";
 	assert(ind1.toString() == sOut);
+	//////////////////////////////////
+	ind1.clear_data();
+	assert(ind1.index == xIndex1);
+	assert(ind1.size == 0);
 }// unittest
 //////////////////////
 //eof: indiv.d

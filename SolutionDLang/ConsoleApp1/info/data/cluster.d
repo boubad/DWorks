@@ -9,10 +9,10 @@ import std.format : formattedWrite;
 import info.data.indiv;
 /////////////////////////
 class Cluster(T=int,U=int) : Indiv!(T,U) {
-	private:
-		U[]	_members;
-		real[] _sum;
-	public:
+private:
+	U[]	_members;
+	real[] _sum;
+public:
 	this(){
 		super();
 	}
@@ -27,11 +27,22 @@ public:
 		return _members.dup;
 	}
 	void reset(){
-		this.value([]);
 		_members = [];
 		_sum = [];
 	}// reset
-	bool add_indiv(in Indiv!(T,U) other) 
+	void update_center(){
+		immutable int ntotal = _members.length;
+		if (ntotal > 0){
+			immutable int nc = _sum.length;
+			T[] result = [];
+			for (int i = 0; i < nc; ++i){
+				T val = cast(T)(_sum[i] / ntotal);
+				result ~= val;
+			}// i
+			this.value(result);
+		}// ntotal
+	}// update_center
+	bool add_indiv(in Indiv!(T,U) other, bool bUpdate = false) 
 	in {
 		assert(other.is_valid);
 		assert(other.size > 0);
@@ -62,26 +73,23 @@ public:
 		}
 		if (!bFound){
 			_members ~= nIndex;
-			immutable int ntotal = _members.length;
-			T[] result = [];
-			for (int i = 0; i < nc; ++i){
-				T val = cast(T)(_sum[i] / ntotal);
-				result ~= val;
-			}// i
-			this.value(result);
+			if (bUpdate) {
+				this.update_center();
+			}
 		}// not found
 		return (!bFound);
 	}// add_indiv
-	public:
-		override string toString() const {
-			immutable n = _members.length;
-			auto writer = appender!string();
-			formattedWrite(writer,"%s\t[",this.index);
-			for (int i = 0; i < n; ++i){
-				if (i > 0){
-					formattedWrite(writer,", ");
-				}
-				formattedWrite(writer,"%s",_members[i]);
+
+public:
+	override string toString() const {
+		immutable n = _members.length;
+		auto writer = appender!string();
+		formattedWrite(writer,"%s\t[",this.index);
+		for (int i = 0; i < n; ++i){
+			if (i > 0){
+				formattedWrite(writer,", ");
+			}
+			formattedWrite(writer,"%s",_members[i]);
 		}// i
 		formattedWrite(writer,"]");
 		return writer.data;
@@ -101,7 +109,7 @@ unittest {
 	assert(c1.members == []);
 	c1.reset();
 	auto ind1 = new Indiv!(int,int)(1,[0,1,2]);
-	c1.add_indiv(ind1);
+	c1.add_indiv(ind1,true);
 	assert(c1.count == 1);
 	assert(c1.members == [1]);
 	auto ind2 = new Indiv!(int,int)(2,[3,4,5]);
