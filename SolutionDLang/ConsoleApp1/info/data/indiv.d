@@ -5,20 +5,29 @@ import std.conv;
 import std.exception;
 import std.array : appender;
 import std.format : formattedWrite;
+/////////////////////////////
+import info.data.distance;
 /////////////////////////
 class Indiv(T=int,U=int) {
 	static assert((U.stringof == "int")||(U.stringof == "short") || (U.stringof == "long") || (U.stringof == "uint")||(U.stringof == "ushort") || (U.stringof == "ulong"));
 	private:
 		U _index;
 		T[] _data;
+		static  DistanceFunc!(T) _defaultDistanceFunc;
+		static this() {
+			_defaultDistanceFunc = new ManhattanDistanceFunc!(T);
+		}
 	public:
 		this(){
 			_index = cast(U)-1;
 		}
+		this(U aIndex){
+			_index = aIndex;
+		}
 		this(U aIndex, const T[] aData)
 		in{
 			assert(aIndex >= 0);
-			assert(aData.length > 0);
+			assert(aData.length >= 0);
 		}body{
 			_index = aIndex;
 			_data = aData.dup;
@@ -28,35 +37,38 @@ class Indiv(T=int,U=int) {
 		bool is_valid() const @property { return ((_index >= 0) && (_data.length >= 0));}
 		U index() const @property { return _index;}
 		U size() const @property { return _data.length;}
+		@property T[] value() const {
+			return _data.dup;
+		}
+		@property void value(const T[] xdata){
+			_data = xdata.dup;
+		}// value
 		T value_at(Z)(const Z icol) const 
 			in {
 				assert(cast(int)icol >= cast(int)0);
+				assert(cast(int)icol < cast(int)_data.length);
 			}
 			body {
-				enforce(cast(int)icol < cast(int)_data.length);
+				
 				return (_data[cast(int)icol]);
 			}
 		
-		double distance(const Indiv!(T,U) other) const
+		double distance(const Indiv!(T,U) other, DistanceFunc!(T) func = _defaultDistanceFunc) const
 		in {
+			assert(!(func is null));
 			assert(other._data.length == _data.length);
 		}out(result){
-			assert(result >= cast(T)0);
+			assert(result >= 0);
 		}body {
-			real s = compute_distance(other);
+			real s = compute_distance(other, func);
 			return cast(double)s;
 		}// distance
-		void distance(Z)(in Indiv!(T,U) other, out Z resp) const
+		void distance(Z)(in Indiv!(T,U) other, out Z resp, DistanceFunc!(T) func = _defaultDistanceFunc) const
 			in {
 				assert(other._data.length == _data.length);
 			}body {
-				Z s = 0;
-				immutable int n = _data.length;
-				for (int i = 0; i < n; ++i){
-					Z t = cast(Z)(_data[i] - other._data[i]);
-					s += t * t;
-				}// i
-				resp = s;
+				resp = cast(Z)compute_distance(other, func);
+				assert(resp >= 0);
 			}// distance
 	public:
 		override string toString() const {
@@ -96,23 +108,28 @@ class Indiv(T=int,U=int) {
 			return (cast(size_t)_index);
 		}
 	private:
-		real compute_distance(const Indiv!(T,U) other) const {
-			real s = 0;
-			immutable int n = _data.length;
-			for (int i = 0; i < n; ++i){
-				real t = _data[i] - other._data[i];
-				s += t * t;
-			}// i
+		real compute_distance(const Indiv!(T,U) other,DistanceFunc!(T) func) const {
+			real s = func(_data, other._data);
 			return (s);
 		}// compute_distance
 }// class Indiv(T,U)
 ///////////////////////
 unittest {
+	class Toto {
+		int a;
+	}
 	////////////////////////////////
 	auto ind0 = new Indiv!(int,int);
 	assert(!ind0.is_valid);
 	assert(ind0.index == -1);
 	assert(ind0.size == 0);
+	assert(ind0.value == []);
+	////////////////////////////////
+	int ii = 56;
+	auto nx = new Indiv!(int)(ii);
+	assert(nx.is_valid);
+	assert(nx.index == ii);
+	assert(nx.size == 0);
 	////////////////////////////////
 	immutable int[] data1 = [0,1,2,3,4];
 	immutable int xIndex1 = 100;
@@ -120,6 +137,7 @@ unittest {
 	assert(ind1.is_valid);
 	assert(ind1.index == xIndex1);
 	assert(ind1.size == data1.length);
+	assert(ind1.value == [0,1,2,3,4]);
 	assert(ind1.value_at(0) == 0);
 	assert(ind1.value_at(1) == 1);
 	assert(ind1.value_at(2) == 2);
@@ -138,16 +156,18 @@ unittest {
 	assert(ind2.value_at(3) == 8);
 	assert(ind2.value_at(4) == 9);
 	////////////////////////////////////
+	double xx  = 25;
 	double d1 = ind1.distance(ind2);
-	assert(d1 == cast(double)125);
+	assert(d1 == xx);
 	double d2 = ind2.distance(ind1);
 	assert(d1 == d2);
 	///////////////////////////////////////
 	int nd1, nd2;
 	ind1.distance(ind2,nd1);
-	assert(nd1 == cast(int)125);
+	assert(nd1 == xx);
 	ind2.distance(ind1,nd2);
 	assert(nd1 == nd2);
+	
 	//////////////////////////////////////
 	immutable int xIndex3 = 10;
 	auto ind11 = new Indiv!(int,int)(xIndex1,[7,8,9]);
@@ -157,6 +177,9 @@ unittest {
 	assert(ind1 != ind2);
 	assert(indxx < ind1);
 	assert(ind1 > indxx);
+	assert(ind1.opCmp(ind11) == 0);
+	auto d = new Toto;
+	assert(ind1.opCmp(d) != 0);
 	////////////////////////
 	assert(ind1.toHash() == ind1.index);
 	assert(ind2.toHash() == ind2.index);

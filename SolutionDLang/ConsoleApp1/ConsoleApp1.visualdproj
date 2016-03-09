@@ -37,12 +37,12 @@
   <useInline>0</useInline>
   <release>0</release>
   <preservePaths>0</preservePaths>
-  <warnings>0</warnings>
+  <warnings>1</warnings>
   <infowarnings>0</infowarnings>
   <checkProperty>0</checkProperty>
   <genStackFrame>0</genStackFrame>
   <pic>0</pic>
-  <cov>0</cov>
+  <cov>1</cov>
   <nofloat>0</nofloat>
   <Dversion>2</Dversion>
   <ignoreUnsupportedPragmas>0</ignoreUnsupportedPragmas>
@@ -207,6 +207,8 @@
  <Folder name="ConsoleApp1">
   <Folder name="info">
    <Folder name="data">
+    <File path="info\data\cluster.d" />
+    <File path="info\data\distance.d" />
     <File path="info\data\indiv.d" />
     <File path="info\data\matdata.d" />
    </Folder>
