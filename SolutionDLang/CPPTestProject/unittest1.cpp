@@ -3,7 +3,10 @@
 ///////////////////////////////////
 #include <cstdlib>
 ////////////////////////////////////
+#include <utils.h>
 #include <indiv.h>
+#include <matdata.h>
+#include <cluster.h>
 //////////////////////////////////////
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace info;
@@ -26,7 +29,7 @@ namespace CPPTestProject
 		{
 			int aIndex = 100;
 			int aIndex2 = 150;
-			size_t n = 20;
+			size_t n = 30;
 			std::valarray<int> data;
 			std::valarray<int> data2;
 			gener_data(n, data);
@@ -45,6 +48,77 @@ namespace CPPTestProject
 			std::wstring sd = os.str();
 			Logger::WriteMessage(sd.c_str());
 		}// TestIndiv
-
+		TEST_METHOD(TestMatData)
+		{
+			size_t n = 30;
+			size_t nCols = 3;
+			size_t nRows = 10;
+			std::valarray<int> data;
+			gener_data(n, data);
+			MatData<int> oMat(nRows, nCols, &data);
+			std::wstring s;
+			oMat.toString(s);
+			Logger::WriteMessage(s.c_str());
+			std::wstringstream os;
+			os << L"INDIVS" << std::endl;
+			const size_t nr = oMat.rows();
+			const size_t nc = oMat.cols();
+			for (size_t i = 0; i < nr; ++i) {
+				std::valarray<int> v;
+				oMat.row_at(i, v);
+				os << i << L"\t";
+				write_valarray(os, v);
+				os << std::endl;
+			}// i
+			os << L"COLS" << std::endl;
+			for (size_t i = 0; i < nc; ++i) {
+				std::valarray<int> v;
+				oMat.col_at(i, v);
+				os << i << L"\t";
+				write_valarray(os, v);
+				os << std::endl;
+			}// i
+			////////////////////////////
+			os << L"MODE ROW" << std::endl;
+			DataMode mode = DataMode::modeRow;
+			size_t nn = oMat.get_data_count(mode);
+			for (size_t i = 0; i < nn; ++i) {
+				std::valarray<int> v;
+				oMat.data_at(i, mode, v);
+				os << i << L"\t";
+				write_valarray(os, v);
+				os << std::endl;
+			}// i
+			os << L"MODE COL" << std::endl;
+			mode = DataMode::modeCol;
+			nn = oMat.get_data_count(mode);
+			for (size_t i = 0; i < nn; ++i) {
+				std::valarray<int> v;
+				oMat.data_at(i, mode, v);
+				os << i << L"\t";
+				write_valarray(os, v);
+				os << std::endl;
+			}// i
+			/////////////////////
+			std::wstring sd = os.str();
+			Logger::WriteMessage(sd.c_str());
+		}// TestMatData
+		TEST_METHOD(TestCluster)
+		{
+			int aIndex = 100;
+			size_t n = 5;
+			Cluster<int, int> c(aIndex);
+			size_t nb = 10;
+			for (size_t i = 0; i < nb; ++i) {
+				std::valarray<int> v;
+				gener_data(n, v);
+				c.add((int)i, v);
+			}// i
+			c.update_center();
+			std::wstringstream os;
+			os << c;
+			std::wstring sd = os.str();
+			Logger::WriteMessage(sd.c_str());
+		}// TestCluster
 	};
 }

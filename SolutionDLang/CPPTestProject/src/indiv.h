@@ -101,7 +101,7 @@ namespace info {
 			
 		}// distance
 	public:
-		std::ostream & write_to(std::ostream &os) const {
+		virtual std::ostream & write_to(std::ostream &os) const {
 			os << "{" << this->_index << " ,[";
 			const size_t n = this->_data.size();
 			for (size_t i = 0; i < n; ++i) {
@@ -110,10 +110,10 @@ namespace info {
 				}
 				os << this->_data[i];
 			}// i
-			os << "]";
-			return os;
+			os << "] }";
+			return (os);
 		}// write_to
-		std::wostream & write_to(std::wostream &os) const {
+		virtual std::wostream & write_to(std::wostream &os) const {
 			os << L"{" << this->_index << L" ,[";
 			const size_t n = this->_data.size();
 			for (size_t i = 0; i < n; ++i) {
@@ -123,11 +123,21 @@ namespace info {
 				os << this->_data[i];
 			}// i
 			os << L"] }";
-			return os;
+			return (os);
 		}// write_to
 	}; // class Indiv<T,U>
 	   /////////////////////////
 }// namespace info
+///////////////////////////////////
+template <typename T, typename U>
+std::ostream & operator<<(std::ostream &os, const info::Indiv<T, U> &d) {
+	return (d.write_to(os));
+}
+template <typename T, typename U>
+std::wostream & operator<<(std::wostream &os, const info::Indiv<T, U> &d) {
+	return (d.write_to(os));
+}
+///////////////////////////////////
 #endif // !__INDIV_H__
 ///////////////////////
 //eof: indiv.h

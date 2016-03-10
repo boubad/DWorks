@@ -30,6 +30,15 @@
     <ClInclude Include="src\distance.h">
       <Filter>Header Files\src</Filter>
     </ClInclude>
+    <ClInclude Include="src\matdata.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cluster.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
