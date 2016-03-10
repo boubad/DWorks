@@ -7,94 +7,232 @@ import std.array : appender;
 import std.format : formattedWrite;
 ////////////////////////////
 import info.data.indiv;
-/////////////////////////
-class Cluster(T=int,U=int) : Indiv!(T,U) {
+/////////////////////////////
+class ClusterDesc(U) {
 private:
-	U[]	_members;
-	real[] _sum;
+	U	_index;
+	U[] _members;
 public:
 	this(){
-		super();
-	}
-	this(U aIndex){
-		super(aIndex);
-	}
-public:
-	@property int count() const {
-		return _members.length;
-	}
-	@property U[] members() const {
-		return _members.dup;
-	}
-	void reset(){
 		_members = [];
-		_sum = [];
-	}// reset
-	void update_center(){
-		immutable int ntotal = _members.length;
-		if (ntotal > 0){
-			immutable int nc = _sum.length;
-			T[] result = [];
-			for (int i = 0; i < nc; ++i){
-				T val = cast(T)(_sum[i] / ntotal);
-				result ~= val;
-			}// i
-			this.value(result);
-		}// ntotal
-	}// update_center
-	bool add_indiv(in Indiv!(T,U) other, in bool bUpdate = false) 
-	in {
-		assert(!(other is null));
-		assert(other.is_valid);
-		assert(other.size > 0);
+	}
+	this(U aIndex)
+	in{
+		assert(aIndex >= 0);
 	}
 	body{
+		_index = aIndex;
+		_members = [];
+	}
+	this(U aIndex, const U[] data)
+	in{
+		assert(aIndex >= 0);
+		assert(!(data is null));
+	}
+	body{
+		_index = aIndex;
+		_members = data.dup;
+	}
+public:
+	override bool opEquals(Object o) const {
+		auto rhs = cast(const ClusterDesc!(U))o;
+		if (rhs is null){
+			return false;
+		}
 		immutable int n = _members.length;
-		immutable nIndex = other.index;
-		immutable int nc = other.size;
-		bool bFound = false;
-		if (n < 1) {
-			_sum = [];
-			for (int i = 0; i < nc; ++i){
-				_sum ~= other.value_at(i);
-			}// i
-		} else {
-			assert(nc == this.size);
-			foreach (aIndex; _members) {
-				if (aIndex == nIndex){
+		if (rhs._members.length != n){
+			return false;
+		}
+		foreach (v1; _members){
+			bool bFound = false;
+			foreach (v2; rhs._members){
+				if (v1 == v2){
 					bFound = true;
 					break;
 				}
-			}// foreach
+			}// v2
 			if (!bFound){
-				for (int i = 0; i < nc; ++i){
-					_sum[i] += other.value_at(i);
-				}// i
-			}// not found
-		}
-		if (!bFound){
-			_members ~= nIndex;
-			if (bUpdate) {
-				this.update_center();
+				return false;
 			}
-		}// not found
-		return (!bFound);
-	}// add_indiv
-
+		}// v1
+		return true;
+	}// opEquals
 public:
-	override string toString() const {
-		immutable n = _members.length;
-		auto writer = appender!string();
-		formattedWrite(writer,"%s\t[",this.index);
-		for (int i = 0; i < n; ++i){
-			if (i > 0){
-				formattedWrite(writer,", ");
+	ClusterDesc!(U) deepCopy() const {
+		return new ClusterDesc!(U)(_index,_members);
+	}// deepCopy
+	@property U index() const {
+		return _index;
+	}
+	@property int count() const 
+		{
+			return _members.length;
+		}
+		@property U[] members() const
+			 {
+				return _members.dup;
 			}
-			formattedWrite(writer,"%s",_members[i]);
-		}// i
-		formattedWrite(writer,"]");
-		return writer.data;
-	}// toString
+		void reset(){
+				_members = [];
+			}
+		bool contains(in U aIndex) const
+			in{
+				assert(aIndex >= 0);
+				assert(!(_members is null));
+			}
+		body {
+			immutable int n = _members.length;
+			for (int i = 0; i < n; ++i){
+				if (_members[i] == aIndex){
+					return true;
+				}
+			}
+			return false;
+		}
+		bool add(in U aIndex)
+		in{
+			assert(aIndex >= 0);
+		}
+		body {
+			immutable int n = _members.length;
+			for (int i = 0; i < n; ++i){
+				if (_members[i] == aIndex){
+					return false;
+				}
+			}
+			_members ~= aIndex;
+			return true;
+		}
+}// class ClusterDesc
+/////////////////////////
+class Cluster(T=int,U=int) : Indiv!(T,U) {
+private:
+	real[] _sum;
+	ClusterDesc!(U) _desc;
+public:
+	this(){
+		super();
+		_sum = [];
+		_desc = new ClusterDesc!(U);
+	}
+	this(U aIndex){
+		super(aIndex);
+		_sum = [];
+		_desc = new ClusterDesc!(U)(aIndex);
+	}
+	this(U aIndex, const T[] data){
+		super(aIndex,data);
+		_sum = [];
+		_desc = new ClusterDesc!(U)(aIndex);
+	}
+public:
+	Cluster!(T,U) deepCopy() const {
+		auto r = new Cluster!(T,U)(this.index,this.value);
+		r._sum = _sum.dup;
+		r._desc = _desc.deepCopy();
+		return r;
+	}
+	@property ClusterDesc!(U) desc() 
+	in{
+		assert(!(_desc is null));
+	}
+	body{
+		return _desc;
+	}
+	@property int count() const 
+		in{
+			assert(!(_desc is null));
+		}out(result) {
+			assert(result >= 0);
+		}
+		body
+		{
+			return _desc.count;
+		}
+		@property U[] members() const {
+			return _desc.members;
+		}
+		void reset()
+		in {
+			assert(!(_desc is null));
+		}body{
+			_desc.reset();
+			_sum = [];
+		}// reset
+		void update_center()
+		in {
+			assert(!(_desc is null));
+			assert(!(_sum is null));
+		}
+		body
+		{
+			immutable int ntotal = _desc.count;
+			if (ntotal > 0){
+				immutable int nc = _sum.length;
+				T[] result = [];
+				result.length = nc;
+				for (int i = 0; i < nc; ++i){
+					result[i] = cast(T)(_sum[i] / ntotal);
+				}// i
+				this.value(result);
+			}// ntotal
+		}// update_center
+		bool add_array(in U nIndex, in T[] xdata, in bool bUpdate)
+		in {
+			assert(nIndex >= 0);
+			assert(!(xdata is null));
+			assert(!(_desc is null));
+		}
+		body {
+			immutable int n = _desc.count;
+			immutable int nc = xdata.length;
+			bool bFound = false;
+			if (n < 1) {
+				_sum = [];
+				_sum.length = nc;
+				for (int i = 0; i < nc; ++i){
+					_sum[i] = xdata[i];
+				}// i
+			} else {
+				assert(_sum.length == xdata.length);
+				bFound = _desc.contains(nIndex);
+				if (!bFound){
+					for (int i = 0; i < nc; ++i){
+						_sum[i] += xdata[i];
+					}// i
+				}// not found
+			}
+			if (!bFound){
+				_desc.add(nIndex);
+				if (bUpdate) {
+					this.update_center();
+				}
+			}// not found
+			return (!bFound);
+		}// add_array
+		bool add_indiv(in Indiv!(T,U) other, in bool bUpdate = false) 
+		in {
+			assert(!(other is null));
+			assert(other.is_valid);
+		}
+		body{
+			return this.add_array(other.index, other.value,bUpdate);
+		}// add_indiv
+	public:
+		override string toString() const {
+			immutable n = _desc.count;
+			U[] xdata = _desc.members;
+			auto writer = appender!string();
+			formattedWrite(writer,"%s\t[",this.index);
+			for (int i = 0; i < n; ++i){
+				if (i > 0){
+					formattedWrite(writer,", ");
+				}
+				formattedWrite(writer,"%s",xdata[i]);
+			}// i
+			formattedWrite(writer,"]");
+			return writer.data;
+		}// toString
 }// class Cluster
 //////////////////////////////////////
 unittest {

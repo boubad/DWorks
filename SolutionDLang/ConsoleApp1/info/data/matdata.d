@@ -36,14 +36,21 @@ class MatData(T){
 		T[] row_at(int irow) const 
 		in {
 			assert((irow >= 0) && (irow < _rows));
-		} body {
+		} out(result) {
+				assert(!(result is null));
+				assert(result.length == _cols);
+		}body {
 			enforce(_cols > 0);
 			return _data[_cols * irow..((irow + 1) * _cols)].dup;
 		}
 		T[] col_at(int icol) const 
 		in {
 			assert((icol >= 0) && (icol < _cols));
-		} body {
+		} 
+		out(result){
+			assert(!(result is null));
+			assert(result.length == _rows);
+		}body {
 			enforce(_rows > 0);
 			T[] resp = [];
 			for (int i = 0; i < _rows; ++i){

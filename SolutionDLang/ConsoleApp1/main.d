@@ -3,6 +3,7 @@ import std.stdio;
 import info.data.indiv;
 import info.data.matdata;
 import info.data.cluster;
+import info.algo.clusterize;
 ///////////////////////////
 int main(string[] argv)
 {
@@ -11,6 +12,8 @@ int main(string[] argv)
 	immutable int[] data = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
 	auto m = new MatData!(int)(nRows,nCols,data);
 	auto xx = new Cluster!(int,int)(nRows);
+	auto yy = new Clusterization!(int,int)(m,2);
+	yy.clusterize();
 	writeln(m);
 	writeln();
     writeln("Hello D-World!");

@@ -206,11 +206,15 @@
  </Config>
  <Folder name="ConsoleApp1">
   <Folder name="info">
+   <Folder name="algo">
+    <File path="info\algo\clusterize.d" />
+   </Folder>
    <Folder name="data">
     <File path="info\data\cluster.d" />
     <File path="info\data\distance.d" />
     <File path="info\data\indiv.d" />
     <File path="info\data\matdata.d" />
+    <File path="info\data\utils.d" />
    </Folder>
   </Folder>
   <File path="main.d" />

@@ -1,0 +1,5 @@
+module info.data.utils;
+///////////////////////////
+enum DataMode { rowMode, colMode};
+/////////////////////////////
+//eof: utils.d
