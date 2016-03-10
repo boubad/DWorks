@@ -1,4 +1,5 @@
 import std.stdio;
+import std.random;
 ////////////////////////
 import info.data.indiv;
 import info.data.matdata;
@@ -7,14 +8,24 @@ import info.algo.clusterize;
 ///////////////////////////
 int main(string[] argv)
 {
-	immutable int nRows = 5;
-	immutable int nCols = 3;
-	immutable int[] data = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+	int nRows = 28;
+	int nCols = 3;
+	int nTotal = nRows * nCols;
+	int[] data = [];
+	data.length = nTotal;
+	int nMin = 0;
+	int nMax = 20;
+	int n = data.length;
+	for (int i = 0; i < n; ++i){
+		data[i] = uniform(nMin,nMax);
+	}// i
 	auto m = new MatData!(int)(nRows,nCols,data);
-	auto xx = new Cluster!(int,int)(nRows);
-	auto yy = new Clusterization!(int,int)(m,2);
-	yy.clusterize();
 	writeln(m);
+	writeln();
+	auto yy = new Clusterization!(int,int)(m,5);
+	int counter = yy.clusterize();
+	writeln("count\t",counter);
+	writeln(yy);
 	writeln();
     writeln("Hello D-World!");
     return 0;

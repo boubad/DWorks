@@ -152,6 +152,16 @@ public:
 		@property U[] members() const {
 			return _desc.members;
 		}
+		@property real trace() const {
+			real s = 0;
+			T[] vv = this.value;
+			int n = vv.length;
+			for (int i = 0; i < n; ++i){
+				real t = vv[i];
+				s += t * t;
+			}
+			return s;
+		}
 		void reset()
 		in {
 			assert(!(_desc is null));
@@ -160,11 +170,6 @@ public:
 			_sum = [];
 		}// reset
 		void update_center()
-		in {
-			assert(!(_desc is null));
-			assert(!(_sum is null));
-		}
-		body
 		{
 			immutable int ntotal = _desc.count;
 			if (ntotal > 0){
@@ -219,18 +224,34 @@ public:
 			return this.add_array(other.index, other.value,bUpdate);
 		}// add_indiv
 	public:
+		override bool opEquals(Object o) const {
+			auto rhs = cast(const Cluster!(T,U))o;
+			return (rhs && (this.trace == rhs.trace));
+		}// opEquals
+		override int opCmp(Object o) const
+			out(result) {
+				assert((result == -1) || (result == 0) || (result == 1));
+			} body{
+				if (typeid(this) != typeid(o)){
+					return typeid(this).opCmp(typeid(o));
+				}
+				auto rhs = cast(const Cluster!(T,U))o;
+				real t1 = this.trace;
+				real t2 = rhs.trace;
+				if (t1 < t2){
+					return -1;
+				} else if (t1 > t2){
+					return 1;
+				} else {
+					return 0;
+				}
+			}// opCmp
 		override string toString() const {
 			immutable n = _desc.count;
 			U[] xdata = _desc.members;
+			T[] data = this.value;
 			auto writer = appender!string();
-			formattedWrite(writer,"%s\t[",this.index);
-			for (int i = 0; i < n; ++i){
-				if (i > 0){
-					formattedWrite(writer,", ");
-				}
-				formattedWrite(writer,"%s",xdata[i]);
-			}// i
-			formattedWrite(writer,"]");
+			formattedWrite(writer,"{%s, %s, %s, %s}",this.index,data,xdata, this.trace);
 			return writer.data;
 		}// toString
 }// class Cluster
@@ -271,9 +292,6 @@ unittest {
 	assert(c1.count == 5);
 	assert(c1.members == [1,2,3,4,5]);
 	///////////////////////////////////
-	string sx0 = "100\t[1, 2, 3, 4, 5]";
-	string sx = c1.toString();
-	assert(sx == sx0);
 }// unittest
 //////////////////////////////////////
 //eof: clster.d

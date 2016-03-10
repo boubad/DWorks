@@ -1,6 +1,13 @@
 module info.algo.clusterize;
 /////////////////////
 import std.random;
+import std.algorithm;
+///////////////////////////////
+import std.string;
+import std.conv;
+import std.exception;
+import std.array : appender;
+import std.format : formattedWrite;
 ///////////////////////////////
 import info.data.utils;
 import info.data.cluster;
@@ -57,6 +64,14 @@ class Clusterization(T=int,U = int) {
 		}// mode
 		@property int clusters_count() const {
 			return (_clusters is null) ? 0 : _clusters.length;
+		}
+		@property Cluster!(T,U)[] clusters() const {
+			 Cluster!(T,U)[] r = [];
+			 r.length = _clusters.length;
+			 for (int i = 0; i < _clusters.length; ++i){
+				 r[i] = (_clusters[i]).deepCopy();
+			 }// i
+			 return r;	
 		}
 		@property DistanceFunc!(T) distance_function()  {
 			return _func;
@@ -123,7 +138,7 @@ class Clusterization(T=int,U = int) {
 				T[] xpoints = [];
 				xpoints.length = ncols;
 				for (int j = 0; j < ncols; ++j){
-					immutable T v1 = minVals[i];
+					immutable T v1 = minVals[j];
 					immutable T v2 = maxVals[j];
 					assert(v1 <= v2);
 					xpoints[j] = uniform(v1,v2);
@@ -200,17 +215,20 @@ class Clusterization(T=int,U = int) {
 		 return result;
 		}// aggreg_one_step
 	public:
-		bool clusterize(int nbIter = NB_ITER_MAX)
+		int clusterize(int nbIter = NB_ITER_MAX)
 		in {
 			assert(nbIter > 0);
 		}
+		
 		body{
 			bool bRet = false;
 			this.initialize(_nbclusters);
 			immutable int nc = _clusters.length;
 			immutable int n = this.ind_size();
 			U[U] oldResult = this.aggreg_one_step(_func);
+			int counter = 0;
 			for (int iter = 0; iter < nbIter; ++iter){
+				++counter;
 				bool bDone = true;
 				U[U] curResult = this.aggreg_one_step(_func);
 				for (int i = 0; i < n; ++i){
@@ -233,8 +251,20 @@ class Clusterization(T=int,U = int) {
 				}
 				oldResult = curResult;
 			}// iter
-			return bRet;
+			sort(_clusters);
+			return counter;
 		}// clusterize
+	public:
+		override string toString() const {
+			immutable n = this.clusters_count;
+			auto writer = appender!string();
+			auto cc = this.clusters;
+			for (int i = 0; i < n; ++i){
+				auto c = cc[i];
+				formattedWrite(writer,"%s\n",c);
+			}// i
+			return writer.data;
+		}// toString
 }// Clusterization
 /////////////////////////
 //eof: clusterize.d
