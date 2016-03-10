@@ -117,7 +117,7 @@ class Clusterization(T=int,U = int) {
 			minVals.length = ncols;
 			maxVals.length = ncols;
 			for (int i = 0; i < ninds; ++i){
-				T[] v = this.get_element(i);
+				const T[] v = this.get_element(i);
 				for (int j = 0; j < ncols; ++j){
 					immutable T val = v[j];
 					if (i == 0){
@@ -219,7 +219,6 @@ class Clusterization(T=int,U = int) {
 		in {
 			assert(nbIter > 0);
 		}
-		
 		body{
 			bool bRet = false;
 			this.initialize(_nbclusters);
@@ -232,15 +231,11 @@ class Clusterization(T=int,U = int) {
 				bool bDone = true;
 				U[U] curResult = this.aggreg_one_step(_func);
 				for (int i = 0; i < n; ++i){
-					U aKey = cast(U)i;
+					immutable U aKey = cast(U)i;
 					assert(aKey in oldResult);
-					U val = oldResult[aKey];
-					if (aKey in curResult){
-						if (curResult[aKey] != val){
-							bDone = false;
-							break;
-						}
-					} else {
+					immutable U val = oldResult[aKey];
+					assert(aKey in curResult);
+					if (curResult[aKey] != val){
 						bDone = false;
 						break;
 					}
