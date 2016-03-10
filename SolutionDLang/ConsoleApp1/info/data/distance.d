@@ -3,16 +3,32 @@ module info.data.distance;
 class DistanceFunc(T) {
 	this(){
 	}
-	double opCall(const T[] data1, const T[] data2) {
+	double opCall(in T[] data1, in T[] data2) const
+	in {
+		assert(!(data1 is null));
+		assert(!(data2 is null));
+		assert(data2.length == data2.length);
+	}
+	out(result){
+		assert(result >= 0);
+	}
+	body{
 		return perform_compute(data1,data2);
 	}// opCall
 	protected:
-		real compute_one_step(in T v1, in T v2, int pos = -1) const {
+		real compute_one_step(in T v1, in T v2, in int pos = -1) const 
+		out(result){
+			assert(result >= 0);
+		}
+		body
+		{
 			real r = v1 - v2;
 			return (r < 0) ? -r : r;
 		}// compute_one_step
-		double perform_compute(const T[] data1, const T[] data2) const
+		double perform_compute(in T[] data1, in T[] data2) const
 		in {
+				assert(!(data1 is null));
+				assert(!(data2 is null));
 				assert(data1.length == data2.length);
 		}
 		out(result){
@@ -40,7 +56,7 @@ class EuclideDistanceFunc(T) : DistanceFunc!(T) {
 		super();
 	}
 protected:
-	override real compute_one_step(in T v1, in T v2, int pos = -1) const {
+	override real compute_one_step(in T v1, in T v2, in int pos = -1) const {
 		real r = v1 - v2;
 		return  (r * r);
 	}// compute_one_step
@@ -50,15 +66,22 @@ class WeightedDistanceFunc(T,W = float) : DistanceFunc!(T) {
 	private:
 		const DistanceFunc!(T) _df;
 		W[] _weights;
+		invariant {
+			assert(!(_df is null));
+			assert(!(_weights is null));
+		}// invaraint
 	public:
-		this(const W[] pw, const  DistanceFunc!(T) fn){
+		this(const W[] pw, const  DistanceFunc!(T) fn)
+		in {
 			assert(!(fn is null));
 			assert(pw.length > 0);
+		}
+		body{
 			_df = fn;
 			_weights = pw.dup;
 		}
 	protected:
-		override real compute_one_step(in T v1, in T v2, int pos) const {
+		override real compute_one_step(in T v1, in T v2, in int pos) const {
 			assert((pos >= 0) && (pos < _weights.length));
 			assert(_weights[pos] >= 0);
 			real r = _df.compute_one_step(v1,v2,pos);

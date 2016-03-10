@@ -42,8 +42,9 @@ public:
 			this.value(result);
 		}// ntotal
 	}// update_center
-	bool add_indiv(in Indiv!(T,U) other, bool bUpdate = false) 
+	bool add_indiv(in Indiv!(T,U) other, in bool bUpdate = false) 
 	in {
+		assert(!(other is null));
 		assert(other.is_valid);
 		assert(other.size > 0);
 	}

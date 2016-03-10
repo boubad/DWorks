@@ -10,54 +10,64 @@ import info.data.distance;
 /////////////////////////
 class Indiv(T=int,U=int) {
 	static assert((U.stringof == "int")||(U.stringof == "short") || (U.stringof == "long") || (U.stringof == "uint")||(U.stringof == "ushort") || (U.stringof == "ulong"));
-	private:
-		U _index;
-		T[] _data;
-		static  DistanceFunc!(T) _defaultDistanceFunc;
-		static this() {
-			_defaultDistanceFunc = new ManhattanDistanceFunc!(T);
-		}
-	public:
-		this(){
-			_index = cast(U)-1;
-		}
-		this(U aIndex){
-			_index = aIndex;
-		}
-		this(U aIndex, const T[] aData)
-		in{
-			assert(aIndex >= 0);
-			assert(aData.length >= 0);
-		}body{
-			_index = aIndex;
-			_data = aData.dup;
-		}
+private:
+	U _index;
+	T[] _data;
+	static  DistanceFunc!(T) _defaultDistanceFunc;
+	static this() {
+		_defaultDistanceFunc = new ManhattanDistanceFunc!(T);
+	}
+	invariant {
+		assert(_index >= 0);
+	}// invaraiant
+public:
+	this(){
+		_data = [];
+	}
+	this(U aIndex){
+		assert(aIndex >= 0);
+		_index = aIndex;
+		_data = [];
+	}
+	this(U aIndex, const T[] aData)
+	in{
+		assert(aIndex >= 0);
+		assert(!(aData is null));
+		assert(aData.length >= 0);
+	}body{
+		_index = aIndex;
+		_data = aData.dup;
+	}
 	//
-	public:
-		bool is_valid() const @property { return ((_index >= 0) && (_data.length >= 0));}
-		U index() const @property { return _index;}
-		U size() const @property { return _data.length;}
-		void clear_data(){
-			this._data = [];
-		}
-		@property T[] value() const {
-			return _data.dup;
-		}
-		@property void value(const T[] xdata){
-			_data = xdata.dup;
-		}// value
-		T value_at(Z)(const Z icol) const 
-			in {
-				assert(cast(int)icol >= cast(int)0);
-				assert(cast(int)icol < cast(int)_data.length);
-			}
-			body {
-				
-				return (_data[cast(int)icol]);
-			}
-		
-		double distance(const Indiv!(T,U) other, DistanceFunc!(T) func = _defaultDistanceFunc) const
+public:
+	bool is_valid() const @property { return ((_index >= 0) && (_data.length >= 0));}
+	U index() const @property { return _index;}
+	U size() const @property { return _data.length;}
+	void clear_data(){
+		this._data = [];
+	}
+	@property T[] value() const {
+		return _data.dup;
+	}
+	@property void value(in T[] xdata)
+	in {
+		assert(!(xdata is null));
+	}
+	body{
+		_data = xdata.dup;
+	}// value
+	T value_at(Z)(in Z icol) const 
 		in {
+			assert(cast(int)icol >= cast(int)0);
+			assert(cast(int)icol < cast(int)_data.length);
+		}
+	body {
+
+		return (_data[cast(int)icol]);
+	}
+	double distance(in Indiv!(T,U) other, in DistanceFunc!(T) func = _defaultDistanceFunc) const
+		in {
+			assert(!(other is null));
 			assert(!(func is null));
 			assert(other._data.length == _data.length);
 		}out(result){
@@ -68,53 +78,63 @@ class Indiv(T=int,U=int) {
 		}// distance
 		void distance(Z)(in Indiv!(T,U) other, out Z resp, DistanceFunc!(T) func = _defaultDistanceFunc) const
 			in {
+				assert(!(func is null));
+				assert(!(other is null));
 				assert(other._data.length == _data.length);
 			}body {
 				resp = cast(Z)compute_distance(other, func);
 				assert(resp >= 0);
 			}// distance
-	public:
-		override string toString() const {
-			immutable n = _data.length;
-			auto writer = appender!string();
-			formattedWrite(writer,"%s\t[",_index);
-			for (int i = 0; i < n; ++i){
-				if (i > 0){
-					formattedWrite(writer,", ");
+		public:
+			override string toString() const {
+				immutable n = _data.length;
+				auto writer = appender!string();
+				formattedWrite(writer,"%s\t[",_index);
+				for (int i = 0; i < n; ++i){
+					if (i > 0){
+						formattedWrite(writer,", ");
+					}
+					formattedWrite(writer,"%s",_data[i]);
+				}// i
+				formattedWrite(writer,"]");
+				return writer.data;
+			}// toString
+			override bool opEquals(Object o) const {
+				auto rhs = cast(const Indiv!(T,U))o;
+				return (rhs && (_index == rhs._index));
+			}// opEquals
+			override int opCmp(Object o) const
+				out(result) {
+					assert((result == -1) || (result == 0) || (result == 1));
+				} body{
+					if (typeid(this) != typeid(o)){
+						return typeid(this).opCmp(typeid(o));
+					}
+					auto rhs = cast(const Indiv!(T,U))o;
+					if (_index < rhs._index) {
+						return (-1);
+					} else if (_index > rhs._index){
+						return (1);
+					} else {
+						return (0);
+					}
+				}// opCmp
+				override size_t toHash() const {
+					return (cast(size_t)_index);
 				}
-				formattedWrite(writer,"%s",_data[i]);
-			}// i
-			formattedWrite(writer,"]");
-			return writer.data;
-		}// toString
-		override bool opEquals(Object o) const {
-			auto rhs = cast(const Indiv!(T,U))o;
-			return (rhs && (_index == rhs._index));
-		}// opEquals
-		override int opCmp(Object o) const
-		out(result) {
-			assert((result == -1) || (result == 0) || (result == 1));
-		} body{
-			if (typeid(this) != typeid(o)){
-				return typeid(this).opCmp(typeid(o));
-			}
-			auto rhs = cast(const Indiv!(T,U))o;
-			if (_index < rhs._index) {
-				return (-1);
-			} else if (_index > rhs._index){
-				return (1);
-			} else {
-				return (0);
-			}
-		}// opCmp
-		override size_t toHash() const {
-			return (cast(size_t)_index);
-		}
-	private:
-		real compute_distance(const Indiv!(T,U) other,DistanceFunc!(T) func) const {
-			real s = func(_data, other._data);
-			return (s);
-		}// compute_distance
+			private:
+				real compute_distance(in Indiv!(T,U) other, in DistanceFunc!(T) func) const
+					in {
+						assert(!(other is null));
+						assert(!(func is null));
+					}
+				out(result) {
+					assert(result >= 0);
+				}body
+				{
+					real s = func(_data, other._data);
+					return (s);
+				}// compute_distance
 }// class Indiv(T,U)
 ///////////////////////
 unittest {
@@ -123,8 +143,8 @@ unittest {
 	}
 	////////////////////////////////
 	auto ind0 = new Indiv!(int,int);
-	assert(!ind0.is_valid);
-	assert(ind0.index == -1);
+	assert(ind0.is_valid);
+	assert(ind0.index == 0);
 	assert(ind0.size == 0);
 	assert(ind0.value == []);
 	////////////////////////////////
