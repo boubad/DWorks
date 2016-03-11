@@ -7,6 +7,8 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <random>
+#include <chrono>
 ///////////////////////////////////
 #include "utils.h"
 ///////////////////////////////////
@@ -69,6 +71,55 @@ namespace info {
 				this->col_at(ipos, v);
 			}
 		}// data_at
+		void get_rows_min_max(std::valarray<T> &vmin, std::valarray<T> &vmax) const {
+			const size_t n = this->cols();
+			vmin.resize(n);
+			vmax.resize(n);
+			for (size_t i = 0; i < n; ++i) {
+				std::valarray<T> v;
+				this->col_at(i, v);
+				vmin[i] = v.min();
+				vmax[i] = v.max();
+			}// i
+		}//get_rows_min_max
+		void get_cols_min_max(std::valarray<T> &vmin, std::valarray<T> &vmax) const {
+			const size_t n = this->rows();
+			vmin.resize(n);
+			vmax.resize(n);
+			for (size_t i = 0; i < n; ++i) {
+				std::valarray<T> v;
+				this->row_at(i, v);
+				vmin[i] = v.min();
+				vmax[i] = v.max();
+			}// i
+		}//get_cols_min_max
+		void get_data_min_max(const DataMode mode, std::valarray<T> &vmin, std::valarray<T> &vmax) const {
+			if (mode == DataMode::modeRow) {
+				this->get_rows_min_max(vmin, vmax);
+			}
+			else if (mode == DataMode::modeCol) {
+				this->get_cols_min_max(vmin, vmax);
+			}
+		}
+		void get_random_data(const DataMode mode, std::valarray<T> &v) const {
+			unsigned seed = (unsigned)std::chrono::system_clock::now().time_since_epoch().count();
+			std::default_random_engine generator(seed);
+			std::valarray<T> vmin, vmax;
+			this->get_data_min_max(mode, vmin, vmax);
+			const size_t n = vmin.size();
+			v.resize(n);
+			for (size_t i = 0; i < n; ++i) {
+				const T a = vmin[i];
+				const T b = vmax[i];
+				if (a >= b) {
+					v[i] = a;
+				}
+				else {
+					std::uniform_real_distribution<double> distribution((double)a, (double)b);
+					v[i] = (T)distribution(generator);
+				}
+			}// i
+		}// get_random_data
 	public:
 		std::ostream & write_to(std::ostream &os) const {
 			const size_t nCols = this->_cols;

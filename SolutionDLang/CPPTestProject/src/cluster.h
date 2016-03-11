@@ -16,7 +16,7 @@ namespace info {
 		Cluster() {}
 		Cluster(const U aIndex) :Indiv<T, U>(aIndex) {}
 		Cluster(const U aIndex, const std::valarray<T> &oCenter) :
-			Indiv(aIndex, oCenter) {}
+			Indiv<T,U>(aIndex, oCenter) {}
 		Cluster(const Cluster<T, U> &other) :Indiv<T, U>(other),
 			_members(other._members), _sum(other._sum) {}
 		Cluster<T, U> & operator=(const Cluster<T, U > &other) {

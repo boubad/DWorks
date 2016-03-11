@@ -129,6 +129,11 @@ namespace CPPTestProject
 			gener_data(nRows * nCols, data);
 			MatData<int> oMat(nRows, nCols, &data);
 			ClusterManager<int, int, long> oMan(&oMat);
+			oMan.clusterize();
+			std::wstringstream os;
+			os << oMan;
+			std::wstring sd = os.str();
+			Logger::WriteMessage(sd.c_str());
 		}//TestClusterManager
 		
 	};
