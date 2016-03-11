@@ -123,10 +123,10 @@ namespace CPPTestProject
 		}// TestCluster
 		TEST_METHOD(TestClusterManager)
 		{
-			size_t nCols = 3;
-			size_t nRows = 20;
+			size_t nCols = 5;
+			size_t nRows = 100;
 			std::valarray<int> data;
-			gener_data(nRows * nCols, data);
+			gener_int_data(nRows * nCols, 0, 20, data);
 			MatData<int> oMat(nRows, nCols, &data);
 			ClusterManager<int, int, long> oMan(&oMat);
 			oMan.clusterize();
