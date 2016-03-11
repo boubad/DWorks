@@ -159,6 +159,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\cluster.h" />
+    <ClInclude Include="src\clusterize.h" />
     <ClInclude Include="src\distance.h" />
     <ClInclude Include="src\indiv.h" />
     <ClInclude Include="src\matdata.h" />

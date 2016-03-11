@@ -7,6 +7,7 @@
 #include <indiv.h>
 #include <matdata.h>
 #include <cluster.h>
+#include <clusterize.h>
 //////////////////////////////////////
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace info;
@@ -120,5 +121,15 @@ namespace CPPTestProject
 			std::wstring sd = os.str();
 			Logger::WriteMessage(sd.c_str());
 		}// TestCluster
+		TEST_METHOD(TestClusterManager)
+		{
+			size_t nCols = 3;
+			size_t nRows = 20;
+			std::valarray<int> data;
+			gener_data(nRows * nCols, data);
+			MatData<int> oMat(nRows, nCols, &data);
+			ClusterManager<int, int, long> oMan(&oMat);
+		}//TestClusterManager
+		
 	};
 }

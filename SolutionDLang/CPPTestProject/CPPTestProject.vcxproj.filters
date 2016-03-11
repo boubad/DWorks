@@ -39,6 +39,9 @@
     <ClInclude Include="src\cluster.h">
       <Filter>Header Files\src</Filter>
     </ClInclude>
+    <ClInclude Include="src\clusterize.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
