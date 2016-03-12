@@ -4,14 +4,20 @@
 /////////////////////////////////
 #include <cassert>
 #include <valarray>
+#include <vector>
 #include <iostream>
 #include <random>
 #include <chrono>
 ////////////////////////////////////////
 namespace info {
+	///////////////////////////////////////////
+	template <typename T>
+	void shuffle_vector(std::vector<T> &v) {
+		std::random_device rd;
+		std::mt19937 g(rd());
+		std::shuffle(v.begin(), v.end(), g);
+	}// shuffle_vector
 	/////////////////////////////////////////
-	enum class DataMode {modeRow,modeCol};
-	/////////////////////////////////////////////
 	template <class INTTYPE>
 	void gener_int_data(const size_t n, INTTYPE a, INTTYPE b, std::valarray<INTTYPE> &v) {
 		assert(n > 0);

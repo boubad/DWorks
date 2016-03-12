@@ -23,5 +23,6 @@ __dummy.html
 **/ipch
 *.sdf
 *.lst
+*.opendb
 
 

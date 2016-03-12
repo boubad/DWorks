@@ -15,18 +15,19 @@
 ////////////////////////////////
 namespace info {
 	////////////////////////////////////////////
-	template <typename T = int, typename U = int, typename Z = long> class ClusterManager {
+	template <typename T = int, typename U = int, class S = std::wstring, typename Z = long> class ClusterManager {
 	public:
 		typedef T DataType;
 		typedef U IndexType;
+		typedef S StringType;
 		typedef Z DistanceType;
 		//
 		typedef std::valarray<T> DataTypeArray;
 		typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
 		typedef MatData<DataType> MatDataType;
-		typedef Cluster<DataType, DistanceType> ClusterType;
+		typedef Cluster<DataType, IndexType,StringType> ClusterType;
 		typedef std::vector<ClusterType> ClusterTypeVector;
-		typedef ClusterManager<DataType, IndexType, DistanceType> ClusterManagerType;
+		typedef ClusterManager<DataType, IndexType, StringType, DistanceType> ClusterManagerType;
 	private:
 		size_t _nbclusters;
 		DataMode _mode;
@@ -37,13 +38,14 @@ namespace info {
 		static const size_t NB_DEFAULT_CLUSTERS;
 		static const size_t NB_MAX_ITERS;
 	public:
-		ClusterManager() :_nbclusters(0), _mode(DataMode::modeRow),
+		ClusterManager() :_nbclusters(0), _mode(DataMode::noMode),
 			_pdata(nullptr), _pfunc(nullptr) {}
 		ClusterManager(const MatDataType *pData, const size_t nbclusters = NB_DEFAULT_CLUSTERS,
 			const DataMode m = DataMode::modeRow,
 			DistanceFuncType *pDist = nullptr) : _nbclusters(nbclusters), _mode(m), _pdata(pData),
 			_pfunc(pDist) {
 			assert(_nbclusters > 0);
+			assert(this->_mode != DataMode::noMode);
 			assert(this->_pdata != nullptr);
 			assert(this->_pdata->is_valid());
 			if ((this->_mode == DataMode::modeRow) && (this->_nbclusters > this->_pdata->rows())) {
@@ -68,7 +70,7 @@ namespace info {
 		virtual ~ClusterManager() {}
 	public:
 		bool is_valid(void) const {
-			return ((this->_nbclusters > 0) && (this->_pdata != nullptr));
+			return ((this->_nbclusters > 0) && (this->_mode != DataMode::noMode) &&  (this->_pdata != nullptr));
 		}// is_valid
 		const ClusterTypeVector & clusters(void) const {
 			return (this->_clusters);
@@ -262,19 +264,19 @@ namespace info {
 		}// toString
 	};// class ClusterManager<T,U,Z>
 	///////////////////////////////////////
-	template <typename T, typename U, typename Z>
-	const size_t ClusterManager<T, U, Z>::NB_DEFAULT_CLUSTERS = 5;
-	template <typename T, typename U, typename Z>
-	const size_t ClusterManager<T, U, Z>::NB_MAX_ITERS = 50;
+	template <typename T, typename U, class S,typename Z>
+	const size_t ClusterManager<T, U, S, Z>::NB_DEFAULT_CLUSTERS = 5;
+	template <typename T, typename U, class S, typename Z>
+	const size_t ClusterManager<T, U, S, Z>::NB_MAX_ITERS = 50;
 	/////////////////////////////////////////////
 }// namespace info
 /////////////////////////////////////
-template <typename T, typename U, typename Z>
-std::ostream & operator<<(std::ostream &os, const info::ClusterManager<T, U, Z> &d) {
+template <typename T, typename U, class S,typename Z>
+std::ostream & operator<<(std::ostream &os, const info::ClusterManager<T, U, S,Z> &d) {
 	return d.write_to(os);
 }
-template <typename T, typename U, typename Z>
-std::wostream & operator<<(std::wostream &os, const info::ClusterManager<T, U, Z> &d) {
+template <typename T, typename U, class S, typename Z>
+std::wostream & operator<<(std::wostream &os, const info::ClusterManager<T, U, S,Z> &d) {
 	return d.write_to(os);
 }
 /////////////////////////////

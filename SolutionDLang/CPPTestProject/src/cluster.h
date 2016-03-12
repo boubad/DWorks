@@ -8,20 +8,23 @@
 //////////////////////////////////////////
 namespace info {
 	///////////////////////////////////
-	template <typename T = int, typename U = int> class Cluster : public Indiv<T, U> {
+	template <typename T = int, typename U = int, class S = std::wstring> class Cluster : public Indiv<T, U,S> {
 	private:
 		std::set<U> _members;
 		std::valarray<double> _sum;
 	public:
 		Cluster() {}
-		Cluster(const U aIndex) :Indiv<T, U>(aIndex) {}
+		Cluster(const U aIndex) :Indiv<T, U,S>(aIndex) {}
+		Cluster(const U aIndex,const S &sid) :Indiv<T, U, S>(aIndex,sid) {}
 		Cluster(const U aIndex, const std::valarray<T> &oCenter) :
-			Indiv<T,U>(aIndex, oCenter) {}
-		Cluster(const Cluster<T, U> &other) :Indiv<T, U>(other),
+			Indiv<T,U,S>(aIndex, oCenter) {}
+		Cluster(const U aIndex, const S &sid,const std::valarray<T> &oCenter) :
+			Indiv<T, U,S>(aIndex, sid,oCenter) {}
+		Cluster(const Cluster<T, U,S> &other) :Indiv<T, U,S>(other),
 			_members(other._members), _sum(other._sum) {}
-		Cluster<T, U> & operator=(const Cluster<T, U > &other) {
+		Cluster<T, U,S> & operator=(const Cluster<T, U,S > &other) {
 			if (this != &other) {
-				Indiv<T, U>::operator=(other);
+				Indiv<T, U,S>::operator=(other);
 				this->_members = other._members;
 				this->_sum = other._sum;
 			}
@@ -58,7 +61,7 @@ namespace info {
 			auto it = this->_members.find(aIndex);
 			return (it != this->_members.end());
 		}// contains
-		void add(const Indiv<T, U> &oInd, bool bUpdate = false) {
+		void add(const Indiv<T, U,S> &oInd, bool bUpdate = false) {
 			this->add(oInd.index(), oInd.value(), bUpdate);
 		}// add
 		void add(const U aIndex, const std::valarray<T> &val, bool bUpdate = false) {
@@ -128,7 +131,7 @@ namespace info {
 			os << L" ] }";
 			return (os);
 		}// write_to
-	};// class Cluster<T,U>
+	};// class Cluster<T,U,S>
 	//////////////////////////////////////
 }// namespace info
 //////////////////////////////////////
