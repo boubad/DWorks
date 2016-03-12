@@ -102,7 +102,15 @@ namespace info {
 		}//get_cols_min_max
 	public:
 		size_t get_data_count(const DataMode mode) const {
-			return ((mode == DataMode::modeRow) ? this->rows() : this->cols());
+			if (mode == DataMode::modeRow) {
+				return (this->rows());
+			}
+			else if (mode == DataMode::modeCol) {
+				return (this->cols());
+			}
+			else {
+				return (0);
+			}
 		}
 		void data_at(const size_t ipos, const DataMode mode, DataTypeArray &v) const {
 			assert(ipos < this->get_data_count(mode));

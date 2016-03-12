@@ -70,7 +70,7 @@ namespace info {
 			auto vv = this->_points;
 			auto vend = vv.end();
 			for (auto it = vv.begin(); it != vend; ++it) {
-				IndivTypePtrVector o = *it;
+				IndivTypePtr o = *it;
 				const IndivType *p = o.get();
 				assert(p != nullptr);
 				if (p->index() == aIndex) {
@@ -108,7 +108,7 @@ namespace info {
 			const StringType &sid = pIndiv->id();
 			const IndexType aIndex = pIndiv->index();
 			for (auto it = vv.begin(); it != vend; ++it) {
-				IndivTypePtrVector o = *it;
+				IndivTypePtr o = *it;
 				const IndivType *p = o.get();
 				assert(p != nullptr);
 				if (p->index() == aIndex) {

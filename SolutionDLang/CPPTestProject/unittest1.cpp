@@ -8,12 +8,28 @@
 #include <matdata.h>
 #include <cluster.h>
 #include <clusterize.h>
+#include <indivs.h>
 //////////////////////////////////////
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace info;
 ////////////////////////////////////
 namespace CPPTestProject
 {		
+	typedef int DataType;
+	typedef int IndexType;
+	typedef long DistanceType;
+	typedef std::wstring StringType;
+	//
+	typedef std::valarray<DataType> DataTypeArray;
+	typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
+	typedef MatData<DataType> MatDataType;
+	typedef Indiv<DataType, IndexType, StringType> IndivType;
+	typedef std::shared_ptr<IndivType> IndivTypePtr;
+	typedef std::vector<IndivTypePtr> IndivTypePtrVector;
+	typedef IndivSet<DataType, IndexType, StringType> ClusterType;
+	typedef std::shared_ptr<ClusterType> ClusterTypePtr;
+	typedef Indivs<DataType, IndexType, DistanceType, StringType> IndivsType;
+
 	TEST_CLASS(UnitTest1)
 	{
 	public:
@@ -106,9 +122,9 @@ namespace CPPTestProject
 		}// TestMatData
 		TEST_METHOD(TestCluster)
 		{
-			int aIndex = 100;
+			IndexType aIndex = 100;
 			size_t n = 5;
-			Cluster<int, int> c(aIndex);
+			ClusterType c(aIndex);
 			size_t nb = 10;
 			for (size_t i = 0; i < nb; ++i) {
 				std::valarray<int> v;
@@ -135,6 +151,28 @@ namespace CPPTestProject
 			std::wstring sd = os.str();
 			Logger::WriteMessage(sd.c_str());
 		}//TestClusterManager
-		
+		TEST_METHOD(TestIndivs)
+		{
+			size_t nCols = 5;
+			size_t nRows = 100;
+			std::valarray<DataType> data;
+			gener_int_data(nRows * nCols, 0, 20, data);
+			MatDataType oMat(nRows, nCols, &data);
+			IndivsType oMan(&oMat);
+			bool b = oMan.check_data();
+			Assert::IsTrue(b);
+			std::wstringstream os;
+			for (size_t i = 0; i < 10; ++i) {
+				IndexType aIndex = (IndexType)(i * 10);
+				ClusterTypePtr oCluster;
+				bool bx = oMan.generate_random_cluster(oCluster, aIndex);
+				Assert::IsTrue(bx);
+				ClusterType *p = oCluster.get();
+				Assert::IsNotNull(p);
+				os << *p << std::endl;
+			}
+			std::wstring sd = os.str();
+			Logger::WriteMessage(sd.c_str());
+		}//TestIndivs
 	};
 }

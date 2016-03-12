@@ -162,6 +162,7 @@
     <ClInclude Include="src\clusterize.h" />
     <ClInclude Include="src\distance.h" />
     <ClInclude Include="src\indiv.h" />
+    <ClInclude Include="src\indivs.h" />
     <ClInclude Include="src\indivset.h" />
     <ClInclude Include="src\matdata.h" />
     <ClInclude Include="src\utils.h" />
