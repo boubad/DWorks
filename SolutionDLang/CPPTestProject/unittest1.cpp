@@ -28,6 +28,7 @@ namespace CPPTestProject
 	typedef std::vector<IndivTypePtr> IndivTypePtrVector;
 	typedef IndivSet<DataType, IndexType, StringType> ClusterType;
 	typedef std::shared_ptr<ClusterType> ClusterTypePtr;
+	typedef std::vector<ClusterTypePtr> ClusterTypePtrVector;
 	typedef Indivs<DataType, IndexType, DistanceType, StringType> IndivsType;
 
 	TEST_CLASS(UnitTest1)
@@ -153,24 +154,35 @@ namespace CPPTestProject
 		}//TestClusterManager
 		TEST_METHOD(TestIndivs)
 		{
+			double vmin = 0.0;
+			double vmax = 20.0;
+			double moy = 10.0;
+			double ecart = 3.0;
+			size_t nbIters = 200;
+			size_t nbClusters = 7;
 			size_t nCols = 5;
 			size_t nRows = 100;
-			std::valarray<DataType> data;
-			gener_int_data(nRows * nCols, 0, 20, data);
+			size_t ntotal = (size_t)(nCols * nRows);
+			std::valarray<double> dv;
+			gener_normal_data(ntotal, vmin, vmax, moy, ecart, dv);
+			std::valarray<DataType> data(ntotal);
+			for (size_t i = 0; i < ntotal; ++i) {
+				data[i] = (DataType)dv[i];
+			}
 			MatDataType oMat(nRows, nCols, &data);
 			IndivsType oMan(&oMat);
 			bool b = oMan.check_data();
 			Assert::IsTrue(b);
+			ClusterTypePtrVector clusters;
+			size_t nc = oMan.clusterize(clusters,nbClusters,nbIters);
 			std::wstringstream os;
-			for (size_t i = 0; i < 10; ++i) {
-				IndexType aIndex = (IndexType)(i * 10);
-				ClusterTypePtr oCluster;
-				bool bx = oMan.generate_random_cluster(oCluster, aIndex);
-				Assert::IsTrue(bx);
-				ClusterType *p = oCluster.get();
+			os << L"COUNT: " << nc << std::endl;
+			for (auto it = clusters.begin(); it != clusters.end(); ++it) {
+				ClusterTypePtr o = *it;
+				ClusterType *p = o.get();
 				Assert::IsNotNull(p);
 				os << *p << std::endl;
-			}
+			}// i
 			std::wstring sd = os.str();
 			Logger::WriteMessage(sd.c_str());
 		}//TestIndivs

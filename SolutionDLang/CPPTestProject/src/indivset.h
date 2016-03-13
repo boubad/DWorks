@@ -47,6 +47,59 @@ namespace info {
 			return (this->_points.empty());
 		}
 	public:
+		template <typename Z>
+		void intra_variance(Z &dist) const {
+			dist  = 0;
+			const IndivTypePtrVector &v1 = this->_points;
+			const size_t n = v1.size();
+			size_t count = 0;
+			for (size_t i = 0; i < n; ++i) {
+				IndivTypePtr oInd1 = v1[i];
+				const IndivType *p1 = oInd1.get();
+				assert(p1 != nullptr);
+				const DataTypeArray &oAr1 = p1->value();
+				for (size_t j = i + 1; j < n; ++j) {
+					IndivTypePtr oInd2 = v1[j];
+					const IndivType *p2 = oInd2.get();
+					assert(p2 != nullptr);
+					const DataTypeArray &oAr2 = p2->value();
+					DataTypeArray t = oAr1 - oAr2;
+					DataTypeArray tt = t * t;
+					dist += (Z)tt.sum();
+					++count;
+				}// j
+			}// i
+			if (count > 1) {
+				dist = (Z)(dist / count);
+			}
+		}// intra_variance
+		bool same_set(const IndivSetType &other) const {
+			const IndivTypePtrVector &v1 = this->_points;
+			const IndivTypePtrVector &v2 = other._points;
+			if (v1.size() != v2.size()) {
+				return (false);
+			}
+			for (auto it = v1.begin(); it != v1.end(); ++it) {
+				IndivTypePtr oInd1 = *it;
+				const IndivType *p1 = oInd1.get();
+				assert(p1 != nullptr);
+				bool bFound = false;
+				IndexType aIndex = p1->index();
+				for (auto jt = v2.begin(); jt != v2.end(); ++jt) {
+					IndivTypePtr oInd2 = *jt;
+					const IndivType *p2 = oInd2.get();
+					assert(p2 != nullptr);
+					if (p2->index() == aIndex) {
+						bFound = true;
+						break;
+					}
+				}// jt
+				if (!bFound) {
+					return (false);
+				}
+			}// it
+			return (true);
+		}// same_set
 		const IndivTypePtrVector & members(void) const {
 			return (this->_points);
 		}
@@ -197,10 +250,13 @@ namespace info {
 		}// add
 	public:
 		virtual std::ostream & write_to(std::ostream &os) const {
+			double var = 0;
+			this->intra_variance(var);
 			os << "{" << std::endl;
 			os << "\tindex: " << this->index() << std::endl;
 			os << "\tid: " << std::endl;
 			os << "\ttrace: " << this->trace() << std::endl;
+			os << "\tintra-variance: " << var << std::endl;
 			os << "\tcenter: ";
 			IndivType::write_to(os);
 			os << std::endl;
@@ -218,10 +274,13 @@ namespace info {
 			return os;
 		}// write_to
 		virtual std::wostream & write_to(std::wostream &os) const {
+			double var = 0;
+			this->intra_variance(var);
 			os << L"{" << std::endl;
 			os << L"\tindex: " << this->index() << std::endl;
 			os << L"\tid: " << std::endl;
 			os << L"\ttrace: " << this->trace() << std::endl;
+			os << L"\tintra-variance: " << var << std::endl;
 			os << L"\tcenter: ";
 			IndivType::write_to(os);
 			os << std::endl;

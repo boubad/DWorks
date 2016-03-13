@@ -18,7 +18,7 @@ namespace info {
 		std::shuffle(v.begin(), v.end(), g);
 	}// shuffle_vector
 	/////////////////////////////////////////
-	template <class INTTYPE>
+	template <class INTTYPE = int>
 	void gener_int_data(const size_t n, INTTYPE a, INTTYPE b, std::valarray<INTTYPE> &v) {
 		assert(n > 0);
 		assert(a < b);
@@ -31,7 +31,7 @@ namespace info {
 		}// i
 	}// gener_real_data
 	//////////////////////////////////////////
-	template <class REALTYPE>
+	template <class REALTYPE = double>
 	void gener_real_data(const size_t n, REALTYPE a, REALTYPE b, std::valarray<REALTYPE> &v) {
 		assert(n > 0);
 		assert(a < b);
@@ -41,6 +41,28 @@ namespace info {
 		v.resize(n);
 		for (size_t i = 0; i < n; ++i) {
 			v[i] = distribution(generator);
+		}// i
+	}// gener_real_data
+	template <class REALTYPE = double>
+	void gener_normal_data(const size_t n, REALTYPE a, REALTYPE b,
+		REALTYPE moy, REALTYPE dev, std::valarray<REALTYPE> &v) {
+		assert(n > 0);
+		assert(a < b);
+		assert((moy >= a) && (moy <= b));
+		assert(dev > 0);
+		unsigned seed = (unsigned)std::chrono::system_clock::now().time_since_epoch().count();
+		std::default_random_engine generator(seed);
+		std::normal_distribution<REALTYPE> distribution(moy, dev);
+		v.resize(n);
+		for (size_t i = 0; i < n; ++i) {
+			REALTYPE x = distribution(generator);
+			if (x < a) {
+				x = a;
+			}
+			if (x > b) {
+				x = b;
+			}
+			v[i] = x;
 		}// i
 	}// gener_real_data
 	//////////////////////////////////////
