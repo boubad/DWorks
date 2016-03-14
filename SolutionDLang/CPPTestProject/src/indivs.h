@@ -5,6 +5,7 @@
 #include "indivset.h"
 #include "matdata.h"
 #include <map>
+#include <algorithm>
 ///////////////////////////////////
 namespace info {
 	//////////////////////////////////////
@@ -164,6 +165,43 @@ namespace info {
 			oCluster = std::make_shared<ClusterType>(aIndex, v);
 			return (oCluster.get() != nullptr);
 		}//generate_random_cluster
+		template <typename Z>
+		void compute_stats(DataTypeArray &vCenter, Z &vTotal, Z &vInter, Z & vIntra,
+			const ClusterTypePtrVector &clusters) const {
+			const size_t nbIndivs = this->indivs_count();
+			assert(nbIndivs > 0);
+			{
+				ClusterTypePtr oo = std::make_shared<ClusterType>();
+				ClusterType *pCenter = oo.get();
+				assert(pCenter != nullptr);
+				for (size_t i = 0; i < nbIndivs; ++i) {
+					IndivTypePtr o = this->indiv_at(i);
+					pCenter->add(o, false);
+				}// i
+				pCenter->update_center();
+				vCenter = pCenter->value();
+			}// center
+			const size_t nc = clusters.size();
+			assert(nc > 0);
+			vTotal = 0;
+			vInter = 0;
+			vIntra = 0;
+			for (size_t i = 0; i < nc; ++i) {
+				ClusterTypePtr c = clusters[i];
+				const ClusterType *pCluster = c.get();
+				assert(pCluster != nullptr);
+				Z x1 = 0;
+				pCluster->intra_inertia(x1);
+				vIntra = (Z)(vIntra + x1);
+				DataTypeArray  v = pCluster->value();
+				DataTypeArray t = v - vCenter;
+				DataTypeArray tt = t * t;
+				vInter = (Z)(vInter + tt.sum());
+			}// i
+			vInter = (Z)(vInter / nc);
+			vIntra = (Z)(vIntra / nc);
+			vTotal = (Z)(vInter + vIntra);
+		}// compute_stats
 		size_t clusterize(ClusterTypePtrVector &clusters,
 			const size_t nbClusters = 5,
 			const size_t nbIters = NB_ITER_MAX) {
@@ -180,14 +218,24 @@ namespace info {
 				nc = nbIndivs;
 			}
 			clusters.resize(nc);
-			for (size_t i = 0; i < nc; ++i) {
-				ClusterTypePtr o;
-				if (!this->generate_random_cluster(o, (IndexType)i)) {
-					clusters.clear();
-					return (count);
-				}
-				clusters[i] = o;
-			}// i
+			{
+				std::vector<size_t> oTemp(nbIndivs);
+				for (size_t i = 0; i < nbIndivs; ++i) {
+					oTemp[i] = i;
+				}// i
+				std::random_shuffle(oTemp.begin(), oTemp.end());
+				for (size_t i = 0; i < nc; ++i) {
+					size_t pos = oTemp[i];
+					IndivTypePtr oInd = this->indiv_at(pos);
+					IndivType *pInd = oInd.get();
+					assert(pInd != nullptr);
+					ClusterTypePtr o = std::make_shared<ClusterType>((IndexType)i, pInd->value());
+					ClusterType *pCluster = o.get();
+					assert(pCluster != nullptr);
+					pCluster->add(oInd, true);
+					clusters[i] = o;
+				}// i
+			}// init
 			IndexTypeMap oldMap;
 			this->aggreg_one_step(oldMap, clusters);
 			ClusterTypePtrVector oldClusters(clusters);

@@ -175,8 +175,16 @@ namespace CPPTestProject
 			Assert::IsTrue(b);
 			ClusterTypePtrVector clusters;
 			size_t nc = oMan.clusterize(clusters,nbClusters,nbIters);
+			DataTypeArray vCenter;
+			DistanceType vTotal = 0, vInter= 0, vIntra=0;
+			oMan.compute_stats(vCenter, vTotal, vInter, vIntra, clusters);
+			ClusterType oC((IndexType)1000, vCenter);
 			std::wstringstream os;
 			os << L"COUNT: " << nc << std::endl;
+			os << L"global center: " << oC << std::endl;
+			os << L"total inertia: " << vTotal << std::endl;
+			os << L"intra inertia: " << vIntra << std::endl;
+			os << L"inter inertia: " << vInter << std::endl;
 			for (auto it = clusters.begin(); it != clusters.end(); ++it) {
 				ClusterTypePtr o = *it;
 				ClusterType *p = o.get();

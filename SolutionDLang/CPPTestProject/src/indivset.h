@@ -48,6 +48,25 @@ namespace info {
 		}
 	public:
 		template <typename Z>
+		void intra_inertia(Z &dist) const {
+			dist = 0;
+			const IndivTypePtrVector &v1 = this->_points;
+			const size_t n = v1.size();
+			const DataTypeArray &oAr0 = this->value();
+			for (size_t i = 0; i < n; ++i) {
+				IndivTypePtr oInd1 = v1[i];
+				const IndivType *p1 = oInd1.get();
+				assert(p1 != nullptr);
+				const DataTypeArray &oAr1 = p1->value();
+				DataTypeArray t = oAr1 - oAr0;
+				DataTypeArray tt = t * t;
+				dist += (Z)tt.sum();
+			}// i
+			if (n > 0) {
+				dist = (Z)(dist / n);
+			}
+		}// intra_inertia
+		template <typename Z>
 		void intra_variance(Z &dist) const {
 			dist  = 0;
 			const IndivTypePtrVector &v1 = this->_points;
@@ -251,11 +270,14 @@ namespace info {
 	public:
 		virtual std::ostream & write_to(std::ostream &os) const {
 			double var = 0;
+			double tx = 0;
+			this->intra_inertia(tx);
 			this->intra_variance(var);
 			os << "{" << std::endl;
 			os << "\tindex: " << this->index() << std::endl;
 			os << "\tid: " << std::endl;
 			os << "\ttrace: " << this->trace() << std::endl;
+			os << "\tintra-inertia: " << tx << std::endl;
 			os << "\tintra-variance: " << var << std::endl;
 			os << "\tcenter: ";
 			IndivType::write_to(os);
@@ -275,10 +297,13 @@ namespace info {
 		}// write_to
 		virtual std::wostream & write_to(std::wostream &os) const {
 			double var = 0;
+			double tx = 0;
+			this->intra_inertia(tx);
 			this->intra_variance(var);
 			os << L"{" << std::endl;
 			os << L"\tindex: " << this->index() << std::endl;
 			os << L"\tid: " << std::endl;
+			os << L"\tintra-inertia: " << tx << std::endl;
 			os << L"\ttrace: " << this->trace() << std::endl;
 			os << L"\tintra-variance: " << var << std::endl;
 			os << L"\tcenter: ";
