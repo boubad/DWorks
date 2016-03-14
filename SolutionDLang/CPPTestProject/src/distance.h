@@ -7,11 +7,11 @@
 /////////////////////////////
 namespace info {
 	//////////////////////////////////////
-	template <typename T = int, typename Z = int> class DistanceFunc {
+	template <typename T = int, typename Z = long> class DistanceFunc {
 	public:
 		DistanceFunc() {}
-		DistanceFunc(const DistanceFunc<T> &) {}
-		DistanceFunc<T> & operator=(const DistanceFunc<T> &) { return (*this); }
+		DistanceFunc(const DistanceFunc<T,Z> &) {}
+		DistanceFunc<T,Z> & operator=(const DistanceFunc<T,Z> &) { return (*this); }
 		virtual ~DistanceFunc() {}
 	public:
 		Z operator()(const std::valarray<T> &v1, const std::valarray<T> &v2) const {
@@ -32,7 +32,7 @@ namespace info {
 		}
 	};// class DistanceFunc
 	////////////////////////////////////////
-	template <typename T = int, typename Z = double, typename W = double> class WeightedDistanceFunc :
+	template <typename T = int, typename Z = long, typename W = double> class WeightedDistanceFunc :
 		public DistanceFunc<T, Z> {
 	private:
 		const DistanceFunc<T, Z> &_func;
@@ -72,7 +72,7 @@ namespace info {
 		}
 	}; // class WeightedDistanceFunc<T,Z,W>
 	////////////////////////////////////////
-	template <typename T = int, typename Z = double> class ManhattanDistanceFunc : public DistanceFunc<T, Z> {
+	template <typename T = int, typename Z = long> class ManhattanDistanceFunc : public DistanceFunc<T, Z> {
 	public:
 		ManhattanDistanceFunc() {}
 		ManhattanDistanceFunc(const ManhattanDistanceFunc<T, T> &other) :DistanceFunc<T, Z>(other) {
@@ -97,7 +97,7 @@ namespace info {
 		}
 	}; // class ManhattanDistanceFunc
 	///////////////////////////////////////////
-	template <typename T = int, typename Z = double> class EuclideDistanceFunc : public DistanceFunc<T, Z> {
+	template <typename T = int, typename Z = long> class EuclideDistanceFunc : public DistanceFunc<T, Z> {
 	public:
 		EuclideDistanceFunc() {}
 		EuclideDistanceFunc(const EuclideDistanceFunc<T, T> &other) :DistanceFunc<T, Z>(other) {

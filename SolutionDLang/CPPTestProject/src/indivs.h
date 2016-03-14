@@ -11,6 +11,7 @@ namespace info {
 	//////////////////////////////////////
 	template <typename T = int, typename U = int, typename Z = long, class S = std::wstring>
 	class Indivs {
+	public:
 		typedef T DataType;
 		typedef U IndexType;
 		typedef Z DistanceType;

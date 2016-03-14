@@ -48,6 +48,9 @@
     <ClInclude Include="src\indivs.h">
       <Filter>Header Files\src</Filter>
     </ClInclude>
+    <ClInclude Include="src\treeelem.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
