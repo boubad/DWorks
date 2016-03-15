@@ -100,6 +100,32 @@ namespace info {
 				vmax[i] = v.max();
 			}// i
 		}//get_cols_min_max
+		bool discretize_data(std::valarray<int> &vRet) const {
+			assert(this->is_valid());
+			const size_t nRows = this->_rows;
+			if (nRows < 8) {
+				return (false);
+			}
+			const size_t nCols = this->_cols;
+			const size_t nTotal = (size_t)(nCols * nRows);
+			vRet.resize(nTotal);
+			const size_t nClasses = 8;
+			for (size_t icol = 0; icol < nCols; ++icol) {
+				DataTypeArray v;
+				this->col_at(i,v);
+				std::valarray<int> index;
+				std::valarray<DataType> limits;
+				bool bRet = make_discrete(v, nClasses, limits, index);
+				assert(bRet);
+				assert(index.size() == v.size());
+				assert(v.size() == nRows);
+				for (size_t irow = 0; irow < nRows; ++irow) {
+					const size_t pos = (size_t)(irow * nCols + icol);
+					vRet[pos] = index[irow];
+				}// irow
+			}// icol
+			return (true);
+		}// discretize
 	public:
 		size_t get_data_count(const DataMode mode) const {
 			if (mode == DataMode::modeRow) {

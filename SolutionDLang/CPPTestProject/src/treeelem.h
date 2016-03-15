@@ -291,7 +291,26 @@ namespace info {
 	template <typename T, typename U, typename Z, class S>
 	std::shared_ptr<EuclideDistanceFunc<T, Z> > TreeElem<T, U, Z, S>::_st_func;
 	//////////////////////////////////////////
-
+	template <typename T = int, typename U = int, typename Z = long, class S = std::wstring>
+	class Tree {
+	public:
+		typedef T DataType;
+		typedef U IndexType;
+		typedef Z DistanceType;
+		typedef S StringType;
+		//
+		typedef std::valarray<T> DataTypeArray;
+		typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
+		typedef MatData<DataType> MatDataType;
+		typedef Indiv<T, U, S> IndivType;
+		typedef std::shared_ptr<IndivType> IndivTypePtr;
+		typedef std::vector<IndivTypePtr> IndivTypePtrVector;
+		typedef std::map<IndexType, IndexType> IndexTypeMap;
+		//
+		typedef TreeElem<DataType, IndexType, DistanceType, StringType> TreeElemType;
+		typedef std::shared_ptr<TreeElemType> TreeElemTypePtr;
+		typedef std::vector<TreeElemTypePtr> TreeElemTypePtrVector;
+	};// class Tree<T,U,Z,S>
 	/////////////////////////////////////////////
 }// namespace info
 /////////////////////////////////

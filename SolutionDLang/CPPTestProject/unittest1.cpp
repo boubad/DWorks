@@ -42,7 +42,16 @@ namespace CPPTestProject
 			}// i
 		}// gener_data
 	public:
-		
+		TEST_METHOD(TestIntToBinaryString) {
+			std::wstringstream os;
+			for (int i= 0; i < 256; ++i) {
+				std::wstring s;
+				size_t n = convert_int_to_binary_string(i, s);
+				os << i << L"\t," << n << L"\t," << s << std::endl;
+			}// i
+			std::wstring sd = os.str();
+			Logger::WriteMessage(sd.c_str());
+		}// TestIntToBibaryString
 		TEST_METHOD(TestIndiv)
 		{
 			int aIndex = 100;
@@ -194,5 +203,26 @@ namespace CPPTestProject
 			std::wstring sd = os.str();
 			Logger::WriteMessage(sd.c_str());
 		}//TestIndivs
+		TEST_METHOD(TestDiscretize)
+		{
+			double vmin = 0.0;
+			double vmax = 20.0;
+			double moy = 10.0;
+			double ecart = 3.0;
+			size_t ntotal = 20;
+			std::valarray<double> dv;
+			gener_normal_data(ntotal, vmin, vmax, moy, ecart, dv);
+			std::valarray<DataType> data(ntotal);
+			for (size_t i = 0; i < ntotal; ++i) {
+				data[i] = (DataType)dv[i];
+			}
+			std::valarray<DataType> limits;
+			std::valarray<IndexType> vals;
+			size_t nbClasses = 5;
+			bool bRet = make_discrete<DataType,IndexType>(data, nbClasses, limits, vals);
+			Assert::IsTrue(bRet);
+			Assert::AreEqual((size_t)(nbClasses + 1), limits.size());
+			Assert::AreEqual(ntotal, vals.size());
+		}//TestDiscretize
 	};
 }

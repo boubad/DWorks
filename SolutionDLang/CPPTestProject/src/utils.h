@@ -5,11 +5,196 @@
 #include <cassert>
 #include <valarray>
 #include <vector>
+#include <algorithm>
 #include <iostream>
 #include <random>
 #include <chrono>
 ////////////////////////////////////////
 namespace info {
+	///////////////////////////////////////////////
+	size_t convert_int_to_binary_string(const int n, std::wstring &sRet) {
+		assert(n >= 0);
+		sRet.clear();
+		int nx = n;
+		if (nx == 0) {
+			sRet = L"0";
+		}
+		else {
+			while (nx > 0) {
+				int r = nx % 2;
+				if (r != 0) {
+					sRet = L"1" + sRet;
+				}
+				else {
+					sRet = L"0" + sRet;
+				}
+				nx = nx / 2;
+			}// nx
+		}
+		return (sRet.size());
+	}// convert_int_to_binary_string
+	size_t convert_int_to_binary_string(const int n, std::string &sRet) {
+		assert(n >= 0);
+		sRet.clear();
+		int nx = n;
+		if (nx == 0) {
+			sRet = "0";
+		}
+		else {
+			while (nx > 0) {
+				int r = nx % 2;
+				if (r != 0) {
+					sRet = "1" + sRet;
+				}
+				else {
+					sRet = "0" + sRet;
+				}
+				nx = nx / 2;
+			}// nx
+		}
+		return (sRet.size());
+	}// convert_int_to_binary_string
+	///////////////////////////////////////////////
+	template <typename T, typename U = int>
+	bool make_discrete(const std::valarray<T> &data, size_t &nClasses, 
+		std::valarray<T> &limits, std::valarray<U> &vals) {
+		assert(nClasses > 0);
+		const size_t n = data.size();
+		if (n < 3) {
+			return false;
+		}
+		if ((nClasses % 2) == 0) {
+			++nClasses;
+		}
+		assert(n >= nClasses);
+		const double vMin = (double)data.min();
+		const double vMax = (double)data.max();
+		if (vMin >= vMax) {
+			return false;
+		}
+		std::vector<T> temp(n);
+		for (size_t i = 0; i < n; ++i) {
+			temp[i] = data[i];
+		}// i
+		std::sort(temp.begin(), temp.end());
+		const size_t n2 = (size_t)(n / 2);
+		double vMed = (double)temp[n2];
+		if ((n % 2) == 0) {
+			vMed = (double)((vMed + temp[(n2 - 1)]) / 2);
+		}
+		assert(vMed >= vMin);
+		assert(vMed <= vMax);
+		const size_t nc = (size_t)(2 * n2 + 1);
+		const double dxMin = (double)((2 * (vMed - vMin)) / nc);
+		const double dxMax = (double)((2 * (vMax - vMed)) / nc);
+		double xMin = vMin;
+		double xMax = vMax;
+		size_t i = 0;
+		size_t j = nClasses;
+		limits.resize(nClasses + 1);
+		while (i < j) {
+			limits[i++] = (T)xMin;
+			limits[j--] = (T)xMax;
+			xMin = xMin + dxMin;
+			xMax = xMax - dxMax;
+		}// while (i < j)
+		vals.resize(n);
+		const size_t nb = limits.size();
+		for (size_t i = 0; i < n; ++i) {
+			const T val = data[i];
+			size_t ipos = 0;
+			if (val <= vMin) {
+				ipos = 0;
+			}
+			else if (val >= vMax) {
+				ipos = (size_t)(nClasses - 1);
+			}
+			else {
+				ipos = 0;
+				for (size_t j = 0; j < nb; ++j) {
+					if (val <= limits[j]) {
+						break;
+					}
+					++ipos;
+				}//j
+			}
+			if (ipos >= nClasses) {
+				ipos = nClasses - 1;
+			}
+			vals[i] = (U)ipos;
+		}// i
+		return (true);
+	}// make_discrete
+	template <typename T, typename U = int>
+	bool make_discrete(const std::vector<T> &data, size_t &nClasses,
+		std::vector<T> &limits, std::vector<U> &vals) {
+		assert(nClasses > 0);
+		const size_t n = data.size();
+		if (n < 3) {
+			return false;
+		}
+		if ((nClasses % 2) == 0) {
+			++nClasses;
+		}
+		assert(n >= nClasses);
+		std::vector<T> temp(n);
+		for (size_t i = 0; i < n; ++i) {
+			temp[i] = data[i];
+		}// i
+		std::sort(temp.begin(), temp.end());
+		const double vMin = (double)temp[0];
+		const double vMax = (double)temp[n - 1];
+		if (vMin >= vMax) {
+			return false;
+		}
+		const size_t n2 = (size_t)(n / 2);
+		double vMed = (double)temp[n2];
+		if ((n % 2) == 0) {
+			vMed = (double)((vMed + temp[(n2 - 1)]) / 2);
+		}
+		assert(vMed >= vMin);
+		assert(vMed <= vMax);
+		const size_t nc = (size_t)(2 * n2 + 1);
+		const double dxMin = (double)((2 * (vMed - vMin)) / nc);
+		const double dxMax = (double)((2 * (vMax - vMed)) / nc);
+		double xMin = vMin;
+		double xMax = vMax;
+		size_t i = 0;
+		size_t j = nClasses;
+		limits.resize(nClasses + 1);
+		while (i < j) {
+			limits[i++] = (T)xMin;
+			limits[j--] = (T)xMax;
+			xMin = xMin + dxMin;
+			xMax = xMax - dxMax;
+		}// while (i < j)
+		vals.resize(n);
+		const size_t nb = limits.size();
+		for (size_t i = 0; i < n; ++i) {
+			const T val = data[i];
+			size_t ipos = 0;
+			if (val <= vMin) {
+				ipos = 0;
+			}
+			else if (val >= vMax) {
+				ipos = (size_t)(nClasses - 1);
+			}
+			else {
+				ipos = 0;
+				for (size_t j = 0; j < nb; ++j) {
+					if (val <= limits[j]) {
+						break;
+					}
+					++ipos;
+				}//j
+			}
+			if (ipos >= nClasses) {
+				ipos = nClasses - 1;
+			}
+			vals[i] = (U)ipos;
+		}// i
+		return (true);
+	}// make_discrete
 	///////////////////////////////////////////
 	template <typename T>
 	void shuffle_vector(std::vector<T> &v) {
