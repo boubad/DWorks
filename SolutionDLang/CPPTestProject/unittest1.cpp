@@ -9,6 +9,7 @@
 #include <cluster.h>
 #include <clusterize.h>
 #include <indivs.h>
+#include <treeelem.h>
 //////////////////////////////////////
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace info;
@@ -30,7 +31,11 @@ namespace CPPTestProject
 	typedef std::shared_ptr<ClusterType> ClusterTypePtr;
 	typedef std::vector<ClusterTypePtr> ClusterTypePtrVector;
 	typedef Indivs<DataType, IndexType, DistanceType, StringType> IndivsType;
-
+	typedef TreeElem<DataType, IndexType, DistanceType, StringType> TreeElemType;
+	typedef std::shared_ptr<TreeElemType> TreeElemTypePtr;
+	typedef std::vector<TreeElemTypePtr> TreeElemTypePtrVector;
+	typedef Tree<DataType, IndexType, DistanceType, StringType> TreeType;
+	///////////////////////////////////////////
 	TEST_CLASS(UnitTest1)
 	{
 	public:
@@ -224,5 +229,70 @@ namespace CPPTestProject
 			Assert::AreEqual((size_t)(nbClasses + 1), limits.size());
 			Assert::AreEqual(ntotal, vals.size());
 		}//TestDiscretize
+		TEST_METHOD(TestTree)
+		{
+			double vmin = 0.0;
+			double vmax = 20.0;
+			double moy = 10.0;
+			double ecart = 3.0;
+			size_t nbClusters = 7;
+			size_t nCols = 5;
+			size_t nRows = 100;
+			size_t ntotal = (size_t)(nCols * nRows);
+			std::valarray<double> dv;
+			gener_normal_data(ntotal, vmin, vmax, moy, ecart, dv);
+			std::valarray<DataType> data(ntotal);
+			for (size_t i = 0; i < ntotal; ++i) {
+				data[i] = (DataType)dv[i];
+			}
+			MatDataType oMat(nRows, nCols, &data);
+			TreeType oTree(&oMat);
+			oTree.aggregate(nbClusters);
+			std::wstringstream os;
+			////////////////////////
+			const size_t n = oTree.size();
+			for (size_t i = 0; i < n; ++i) {
+				const TreeElemType *p = oTree.element_at(i);
+				Assert::IsNotNull(p);
+				IndivTypePtrVector inds;
+				p->get_indivs(inds);
+				os << L"Cluster " << i << L",\t" << p->index() << ",\t" << std::endl;
+				const size_t nn = inds.size();
+				for (size_t j = 0; j < nn; ++j) {
+					IndivType *pInd = (inds[j]).get();
+					Assert::IsNotNull(pInd);
+					os << *pInd << std::endl;
+				}// j
+				os << std::endl;
+			}// i
+			///////////////////////////////
+			std::wstring sd = os.str();
+			Logger::WriteMessage(sd.c_str());
+		}//TestTree
+		TEST_METHOD(TestTree2)
+		{
+			double vmin = 0.0;
+			double vmax = 20.0;
+			double moy = 10.0;
+			double ecart = 3.0;
+			size_t nbClusters = 5;
+			size_t nCols = 5;
+			size_t nRows = 50;
+			size_t ntotal = (size_t)(nCols * nRows);
+			std::valarray<double> dv;
+			gener_normal_data(ntotal, vmin, vmax, moy, ecart, dv);
+			std::valarray<DataType> data(ntotal);
+			for (size_t i = 0; i < ntotal; ++i) {
+				data[i] = (DataType)dv[i];
+			}
+			MatDataType oMat(nRows, nCols, &data);
+			TreeType oTree(&oMat);
+			oTree.aggregate(nbClusters);
+			std::wstringstream os;
+			os << oTree << std::endl;
+			 ///////////////////////////////
+			std::wstring sd = os.str();
+			Logger::WriteMessage(sd.c_str());
+		}//TestTree2
 	};
 }
