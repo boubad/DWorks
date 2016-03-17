@@ -3,6 +3,7 @@
 ///////////////////////////////////
 #include <cstdlib>
 ////////////////////////////////////
+#ifdef TOTO
 #include <utils.h>
 #include <indiv.h>
 #include <matdata.h>
@@ -296,3 +297,4 @@ namespace CPPTestProject
 		}//TestTree2
 	};
 }
+#endif

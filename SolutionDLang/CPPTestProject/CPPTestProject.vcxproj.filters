@@ -54,12 +54,24 @@
     <ClInclude Include="src\variable.h">
       <Filter>Header Files\src</Filter>
     </ClInclude>
+    <ClInclude Include="infotestdata.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\clusterizeindivs.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="unittest1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="infotestdata.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MatDatatTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

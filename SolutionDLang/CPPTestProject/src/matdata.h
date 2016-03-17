@@ -18,30 +18,47 @@ namespace info {
 	//////////////////////////////////////////
 	enum class DataMode { noMode, modeRow, modeCol };
 	////////////////////////////
-	template <typename T = int> class MatData {
+	template <typename T = int, class S = std::wstring> class MatData {
 	public:
 		typedef T DataType;
+		typedef S StringType;
+		typedef std::vector<StringType> StringTypeVector;
 		typedef std::valarray<T> DataTypeArray;
-		typedef MatData<DataType> MatDataType;
+		typedef MatData<DataType, StringType> MatDataType;
 	private:
 		size_t _rows;
 		size_t _cols;
 		const DataTypeArray *_pdata;
+		StringTypeVector _rowids;
+		StringTypeVector _colids;
 	public:
 		MatData() :_rows(0), _cols(0), _pdata(nullptr) {}
-		MatData(const size_t r, const size_t c, const DataTypeArray *pData) :
-			_rows(r), _cols(c), _pdata(pData) {
+		MatData(const size_t r, const size_t c, const DataTypeArray *pData,
+			const StringTypeVector *pRowNames = nullptr,
+			const StringTypeVector *pColNames = nullptr) :
+			_rows(r), _cols(c), _pdata(pData), _rowids(r), _colids(c) {
 			assert(this->_rows > 0);
 			assert(this->_cols > 0);
 			assert(this->_pdata != nullptr);
 			assert(this->_pdata->size() >= (size_t)(this->_rows * this->_cols));
+			if (pRowNames != nullptr) {
+				assert(pRowNames->size() == r);
+				this->_rowids = *pRowNames;
+			}
+			if (pColNames != nullptr) {
+				assert(pColNames->size() == c);
+				this->_colids = *pColNames;
+			}
 		}
-		MatData(const MatDataType &other) :_rows(other._rows), _cols(other._cols), _pdata(other._pdata) {}
+		MatData(const MatDataType &other) :_rows(other._rows), _cols(other._cols), _pdata(other._pdata),
+			_rowids(other._rowids), _colids(other._ids) {}
 		MatDataType & operator=(const MatDataType &other) {
 			if (this != &other) {
 				this->_rows = other._rows;
 				this->_cols = other._cols;
 				this->_pdata = other._pdata;
+				this->_rowids = other._rowids;
+				this->_colids = other._colids;
 			}
 			return (*this);
 		}
@@ -53,7 +70,8 @@ namespace info {
 	public:
 		bool is_valid(void) const {
 			return ((this->rows() > 0) && (this->cols() > 0) && (this->_pdata != nullptr) &&
-				(this->_pdata->size() >= (size_t)(this->cols() * this->rows())));
+				(this->_pdata->size() >= (size_t)(this->cols() * this->rows())) &&
+				(this->_rowids.size() == this->_rows) && (this->_colids.size() == this->_cols));
 		}
 		size_t rows(void) const {
 			return (this->_rows);
@@ -62,6 +80,16 @@ namespace info {
 			return (this->_cols);
 		}
 	public:
+		virtual const StringType &row_name(const size_t i) const {
+			assert(i < this->_rows);
+			assert((this->_rowids.size() == this->_rows));
+			return ((this->_rowids)[i]);
+		}
+		virtual const StringType &col_name(const size_t i) const {
+			assert(i < this->_cols);
+			assert((this->_colids.size() == this->_cols));
+			return ((this->_colids)[i]);
+		}
 		virtual DataType value_at(const size_t irow, const size_t icol) const {
 			assert(this->is_valid());
 			assert(irow < this->_rows);
@@ -100,19 +128,20 @@ namespace info {
 				vmax[i] = v.max();
 			}// i
 		}//get_cols_min_max
-		bool discretize_data(std::valarray<int> &vRet) const {
+		bool discretize_data(std::valarray<int> &vRet, const size_t nc = 7) const {
+			assert(nc > 2);
 			assert(this->is_valid());
 			const size_t nRows = this->_rows;
-			if (nRows < 8) {
+			if (nRows < nc) {
 				return (false);
 			}
 			const size_t nCols = this->_cols;
 			const size_t nTotal = (size_t)(nCols * nRows);
 			vRet.resize(nTotal);
-			const size_t nClasses = 8;
+			size_t nClasses = nc;
 			for (size_t icol = 0; icol < nCols; ++icol) {
 				DataTypeArray v;
-				this->col_at(i,v);
+				this->col_at(icol, v);
 				std::valarray<int> index;
 				std::valarray<DataType> limits;
 				bool bRet = make_discrete(v, nClasses, limits, index);
@@ -126,7 +155,80 @@ namespace info {
 			}// icol
 			return (true);
 		}// discretize
+		template <typename X>
+		bool normalize_data(std::valarray<X> &vRet) const {
+			assert(this->is_valid());
+			const size_t nRows = this->_rows;
+			if (nRows < 3) {
+				return (false);
+			}
+			const size_t nCols = this->_cols;
+			const size_t nTotal = (size_t)(nCols * nRows);
+			vRet.resize(nTotal);
+			for (size_t icol = 0; icol < nCols; ++icol) {
+				DataTypeArray v;
+				std::valarray<double> dv(nRows);
+				this->col_at(icol, v);
+				for (size_t i = 0; i < nRows; ++i) {
+					dv[i] = v[i];
+				}
+				const double moy = (double)(dv.sum() / nRows);
+				std::valarray<double> t = dv - moy;
+				std::valarray<double> tt = t * t;
+				const double ecart2 = (tt.sum()) / (nRows - 1);
+				if (ecart2 <= 0.0) {
+					return false;
+				}
+				const double ecart = std::sqrt(ecart2);
+				std::valarray<double> xt = t / ecart;
+				for (size_t irow = 0; irow < nRows; ++irow) {
+					const size_t pos = (size_t)(irow * nCols + icol);
+					vRet[pos] = (X)xt[irow];
+				}// irow
+			}// icol
+			return (true);
+		}// normalize_data
+		template <typename X>
+		bool recode_data(std::valarray<X> &vRet, const X xMax = (X)255, const X xMin = (X)0) const {
+			assert(xMin < xMax);
+			assert(this->is_valid());
+			const size_t nRows = this->_rows;
+			if (nRows < 3) {
+				return (false);
+			}
+			const size_t nCols = this->_cols;
+			const size_t nTotal = (size_t)(nCols * nRows);
+			vRet.resize(nTotal);
+			for (size_t icol = 0; icol < nCols; ++icol) {
+				DataTypeArray v;
+				this->col_at(icol, v);
+				const DataType vMin = v.min();
+				const DataType vMax = v.max();
+				if (vMin >= vMax) {
+					return (false);
+				}
+				const double delta = (double)(xMax - xMin) / (double)(vMax - vMin);
+				std::valarray<double> dv(nRows);
+				for (size_t i = 0; i < nRows; ++i) {
+					double xx = delta * (v[i] - (double)vMin) + (double)xMin;
+					const size_t pos = (size_t)(i * nCols + icol);
+					vRet[pos] = (X)xx;
+				}
+			}// icol
+			return (true);
+		}// recode_data
 	public:
+		const StringType & data_id_at(const size_t ipos, const DataMode mode) {
+			assert(ipos < this->get_data_count(mode));
+			if (mode == DataMode::modeRow) {
+				return (this->row_name(ipos));
+			}
+			else if (mode == DataMode::modeCol) {
+				return (this->col_name(ipos));
+			}
+			static StringType t;
+			return t;
+		}
 		size_t get_data_count(const DataMode mode) const {
 			if (mode == DataMode::modeRow) {
 				return (this->rows());
@@ -186,56 +288,40 @@ namespace info {
 			s = os.str();
 		}
 	public:
-		virtual std::ostream & write_to(std::ostream &os) const {
-			const size_t nRows = this->_rows;
-			os << nRows << "\t," << this->cols() << std::endl;
-			for (size_t i = 0; i < nRows; ++i) {
-				DataTypeArray v;
-				this->row_at(i, v);
-				const size_t n = v.size();
-				for (size_t j = 0; j < n; ++j) {
-					if (j > 0) {
-						os << " ,";
-					}
-					os << v[j];
-				}// j
-				os << std::endl;
-			}// i
-			return os;
-		}// write_to
 		virtual std::wostream & write_to(std::wostream &os) const {
-			const size_t nRows = this->_rows;
-			os << nRows << L"\t," << this->cols() << std::endl;
+			const size_t nRows = this->rows();
+			const size_t nCols = this->cols();
+			for (size_t i = 0; i < nCols; ++i) {
+				os << L"\t" << this->col_name(i);
+			}// i
+			os << std::endl;
 			for (size_t i = 0; i < nRows; ++i) {
-				DataTypeArray v;
-				this->row_at(i, v);
-				const size_t n = v.size();
-				for (size_t j = 0; j < n; ++j) {
-					if (j > 0) {
-						os << L" ,";
-					}
-					os << v[j];
+				os << this->row_name(i);
+				for (size_t j = 0; j < nCols; ++j) {
+					os << L"\t" << this->value_at(i, j);
 				}// j
 				os << std::endl;
 			}// i
 			return os;
 		}// write_to
-
-	};// class MatData<T>
+	};// class MatData<T,S>
 	//////////////////////////////
-	template <typename T = int, typename U = int> class IndexedMatData : public MatData<T> {
+	template <typename T = int, typename U = int, class S = std::wstring> class IndexedMatData : public MatData<T, S> {
 	public:
 		typedef T DataType;
 		typedef U IndexType;
-		typedef MatData<DataType> MatDataType;
+		typedef S StringType;
+		typedef MatData<DataType, StringType> MatDataType;
 		typedef std::vector<IndexType> IndexTypeVector;
-		typedef IndexedMatData<DataType, IndexType> IndexedMatDataType;
+		typedef IndexedMatData<DataType, IndexType, StringType> IndexedMatDataType;
 	private:
 		IndexTypeVector _rowindex;
 		IndexTypeVector _colindex;
 	public:
 		IndexedMatData() {}
-		IndexedMatData(const size_t r, const size_t c, const DataTypeArray *pData) :MataDataType(r, c, pData),
+		IndexedMatData(const size_t r, const size_t c, const DataTypeArray *pData,
+			const StringTypeVector *pRowNames = nullptr,
+			const StringTypeVector *pColNames = nullptr) :MataDataType(r, c, pData, pRowNames, pColNames),
 			_rowindex(r), _colindex(c) {
 			IndexTypeVector &vr = this->_rowindex;
 			assert(vr.size() == r);
@@ -329,6 +415,14 @@ namespace info {
 			}
 		}
 	public:
+		virtual const StringType &row_name(const size_t i) const {
+			assert(irow < this->_rowindex.size());
+			return ((MatDataType::this->row_name)[i]);
+		}
+		virtual const StringType &col_name(const size_t i) const {
+			assert(icol < this->_colindex.size());
+			return ((MatDataType::this->col_name)[i]);;
+		}
 		virtual DataType value_at(const size_t irow, const size_t icol) const {
 			assert(irow < this->_rowindex.size());
 			assert(icol < this->_colindex.size());
@@ -385,13 +479,26 @@ namespace info {
 			os << L" ]" << std::endl;
 			return MatDataType::write_to(os);
 		}// write_to
-	};// class IndexedMatData<T,U>
+	};// class IndexedMatData<T,U,S>
 	////////////////////////////////////
 }// namespace info
-///////////////////////////////////
-template <class OUTPUT, typename T>
-OUTPUT & operator<<(OUTPUT &os, const info::MatData<T> &d) {
-	return (d.write_to(os));
+/////////////////////////////////////////
+template <typename T, class S>
+std::ostream & operator<<(std::ostream &os, info::MatData<T, S> &d) {
+	return d.write_to(os);
 }
-/////////////////////////////////
+template <typename T, class S>
+std::wostream & operator<<(std::wostream &os, info::MatData<T, S> &d) {
+	return d.write_to(os);
+}
+///////////////////////////////////
+template <typename T, typename U, class S>
+std::ostream & operator<<(std::ostream &os, info::IndexedMatData<T, U, S> &d) {
+	return d.write_to(os);
+}
+template <typename T, typename U, class S>
+std::wostream & operator<<(std::wostream &os, info::IndexedMatData<T, U, S> &d) {
+	return d.write_to(os);
+}
+///////////////////////////////////
 #endif // !__MATDATA_H__

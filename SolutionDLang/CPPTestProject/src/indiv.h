@@ -7,6 +7,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <memory>
 //////////////////////////////////
 #include "distance.h"
 ////////////////////////////////
@@ -19,6 +20,7 @@ namespace info {
 		//
 		typedef std::valarray<DataType> DataTypeArray;
 		typedef Indiv<DataType, IndexType,StringType> IndivType;
+		typedef std::shared_ptr<IndivType> IndivTypePtr;
 	private:
 		IndexType _index;
 		StringType _id;
@@ -98,11 +100,28 @@ namespace info {
 			else {
 				result = (*pFunc)(vv1, vv2);
 			}
-			
 		}// distance
 		template <typename Z>
 		void distance(const IndivType &other, Z &result,
 			const DistanceFunc<T, Z> *pFunc = nullptr) const {
+			if (pFunc == nullptr) {
+				ManhattanDistanceFunc<T, Z> f;
+				result = f(this->value(), other.value());
+			}
+			else {
+				result = (*pFunc)(this->value(), other.value());
+			}
+		}// distance
+		template <typename Z>
+		void distance(const IndivTypePtr &other, Z &result,
+			const DistanceFunc<T, Z> *pFunc = nullptr) const {
+			const IndivType *p = other.get();
+			if (p == nullptr) {
+				result = 0;
+			}
+			else {
+				this->distance(*p, result, pFunc);
+			}
 			if (pFunc == nullptr) {
 				ManhattanDistanceFunc<T, Z> f;
 				result = f(this->_data, other._data);
@@ -110,11 +129,10 @@ namespace info {
 			else {
 				result = (*pFunc)(this->_data, other._data);
 			}
-			
 		}// distance
 	public:
 		virtual std::ostream & write_to(std::ostream &os) const {
-			os << "{" << this->_index  << " ,[";
+			os << "{" << this->_index << ",\t" << this->id()  << ",\t[";
 			const size_t n = this->_data.size();
 			for (size_t i = 0; i < n; ++i) {
 				if (i > 0) {
@@ -126,7 +144,7 @@ namespace info {
 			return (os);
 		}// write_to
 		virtual std::wostream & write_to(std::wostream &os) const {
-			os << L"{" << this->_index << L" " << this->id() << L" ,[";
+			os << L"{" << this->_index << L",\t" << this->id() << L",\t[";
 			const size_t n = this->_data.size();
 			for (size_t i = 0; i < n; ++i) {
 				if (i > 0) {

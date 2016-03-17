@@ -1,6 +1,6 @@
 #pragma once
-#ifndef __UTILS_H__
-#define __UTILS_H__
+#ifndef __MYUTILS_H__
+#define __MYUTILS_H__
 /////////////////////////////////
 #include <cassert>
 #include <valarray>
@@ -33,6 +33,7 @@ namespace info {
 		}
 		return (sRet.size());
 	}// convert_int_to_binary_string
+#ifdef TOTO
 	size_t convert_int_to_binary_string(const int n, std::string &sRet) {
 		assert(n >= 0);
 		sRet.clear();
@@ -54,6 +55,7 @@ namespace info {
 		}
 		return (sRet.size());
 	}// convert_int_to_binary_string
+#endif // TOTO
 	///////////////////////////////////////////////
 	template <typename T, typename U = int>
 	bool make_discrete(const std::valarray<T> &data, size_t &nClasses, 

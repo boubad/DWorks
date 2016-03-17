@@ -17,16 +17,16 @@ namespace info {
 		typedef Z DistanceType;
 		typedef S StringType;
 		//
-		typedef std::valarray<T> DataTypeArray;
+		typedef std::valarray<DataType> DataTypeArray;
 		typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
-		typedef MatData<DataType> MatDataType;
-		typedef Indiv<T, U, S> IndivType;
+		typedef MatData<DataType,StringType> MatDataType;
+		typedef Indiv<DataType, IndexType, StringType> IndivType;
 		typedef std::shared_ptr<IndivType> IndivTypePtr;
 		typedef std::vector<IndivTypePtr> IndivTypePtrVector;
-		typedef IndivSet<DataType, IndexType, StringType> ClusterType;
-		typedef std::shared_ptr<ClusterType> ClusterTypePtr;
-		typedef std::vector<ClusterTypePtr> ClusterTypePtrVector;
-		typedef std::map<IndexType, IndexType> IndexTypeMap;
+		//typedef IndivSet<DataType, IndexType, StringType> ClusterType;
+		//typedef std::shared_ptr<ClusterType> ClusterTypePtr;
+		//typedef std::vector<ClusterTypePtr> ClusterTypePtrVector;
+		//typedef std::map<IndexType, IndexType> IndexTypeMap;
 		//
 		typedef Indivs<DataType, IndexType, DistanceType, StringType> IndivsType;
 	private:
@@ -34,22 +34,20 @@ namespace info {
 		MatDataType *_pdata;
 		DistanceFuncType *_pfunc;
 		IndivTypePtrVector _vec;
-	private:
+	protected:
 		static const size_t NB_ITER_MAX;
-		static std::shared_ptr<ManhattanDistanceFunc<DataType, DistanceType> > _st_func;
+		static const size_t NB_DEFAULT_CLUSTERS;
+		static std::shared_ptr<EuclideDistanceFunc<DataType, DistanceType> > _st_func;
 	public:
 		Indivs() :_mode(DataMode::noMode), _pdata(nullptr), _pfunc(nullptr) {
-			if (this->_pfunc == nullptr) {
-				this->_pfunc = _st_func.get();
-			}
+			(void)this->check_distance_func();
 		}
 		Indivs(MatDataType *pData,
 			DataMode m = DataMode::modeRow,
 			DistanceFuncType *pf = nullptr) :
 			_mode(m), _pdata(pData), _pfunc(pf) {
-			if (this->_pfunc == nullptr) {
-				this->_pfunc = _st_func.get();
-			}
+			assert(this->_pdata != nullptr);
+			(void)this->check_data();
 		}
 		Indivs(const IndivsType &other) :_mode(other._mode), _pdata(other._pdata),
 			_pfunc(other._pfunc), _vec(other._vec) {
@@ -65,6 +63,17 @@ namespace info {
 		}
 		virtual ~Indivs() {}
 	public:
+		void set_data(MatDataType *pData,
+			DataMode m = DataMode::modeRow,
+			DistanceFuncType *pf = nullptr) {
+			assert(pData != nullptr);
+			assert(m != DataMode::noMode);
+			this->_mode = m;
+			this->_pdata = pData;
+			this->_pfunc = pf;
+			this->_vec.clear();
+			(void)this->check_data();
+		}// set_data
 		bool is_valid(void) const {
 			return ((this->_mode != DataMode::noMode) && (this->_pdata != nullptr) &&
 				(this->_pdata->is_valid()));
@@ -72,30 +81,11 @@ namespace info {
 		DataMode mode(void) const {
 			return (this->_mode);
 		}
-		void mode(const DataMode m) {
-			if (this->mode != m) {
-				this->_mode = m;
-				this->_vec.clear();
-			}
-		}
 		MatDataType *matdata(void) const {
 			return (this->_pdata);
 		}
-		void matdata(MatDataType *p) {
-			if (p != this->_pdata) {
-				this->_pdata = p;
-				this->_vec.clear();
-			}
-		}
 		DistanceFuncType *distance_func(void) const {
 			return (this->_pfunc);
-		}
-		void distance_func(DistanceFuncType *p) {
-			if (p != this->_pfunc) {
-				this->_pfunc = p;
-				(void)this->check_distance_func();
-				this->_vec.clear();
-			}
 		}
 		const IndivTypePtrVector & indivs(void) const {
 			return (this->_vec);
@@ -110,13 +100,13 @@ namespace info {
 		DistanceType distance(const IndivType *pInd1, const IndivType *pInd2) const {
 			assert(pInd1 != nullptr);
 			assert(pInd2 != nullptr);
+			assert(this->_pfunc != nullptr);
 			DistanceType r = 0;
-			if (this->_pfunc != nullptr) {
-				pInd1->distance(*pInd2, r, this->_pfunc);
-			}
-			else if (_st_func.get() != nullptr) {
-				pInd1->distance(*pInd2, r, _st_func.get());
-			}
+			pInd1->distance(*pInd2, r, this->_pfunc);
+			return (r);
+		}// distance
+		DistanceType distance(const IndivType &pInd1, const IndivType &pInd2) const {
+			this->distance(&pInd2, &pInd2);
 			return (r);
 		}// distance
 		DistanceType distance(const IndivTypePtr &oInd1, const IndivTypePtr &oInd2) const {
@@ -146,7 +136,14 @@ namespace info {
 			assert(p2 != nullptr);
 			return this->distance(p1, p2);
 		}// distance
-	public:
+		DistanceType distance(const ClusterTypePtr &oInd1, const ClusterTypePtr &oInd2) const {
+			const ClusterType *p1 = oInd1.get();
+			const ClusterType *p2 = oInd2.get();
+			assert(p1 != nullptr);
+			assert(p2 != nullptr);
+			return this->distance(p1, p2);
+		}// distance
+	protected:
 		bool check_data(void) {
 			if (!this->_vec.empty()) {
 				return (true);
@@ -156,184 +153,6 @@ namespace info {
 			}
 			return (this->initialize_indivs());
 		}// checkData
-		bool generate_random_cluster(ClusterTypePtr &oCluster, const IndexType aIndex) {
-			oCluster.reset();
-			if (!this->check_data()) {
-				return (false);
-			}
-			DataTypeArray v;
-			this->_pdata->get_random_data(this->_mode, v);
-			oCluster = std::make_shared<ClusterType>(aIndex, v);
-			return (oCluster.get() != nullptr);
-		}//generate_random_cluster
-		template <typename Z>
-		void compute_stats(DataTypeArray &vCenter, Z &vTotal, Z &vInter, Z & vIntra,
-			const ClusterTypePtrVector &clusters) const {
-			const size_t nbIndivs = this->indivs_count();
-			assert(nbIndivs > 0);
-			{
-				ClusterTypePtr oo = std::make_shared<ClusterType>();
-				ClusterType *pCenter = oo.get();
-				assert(pCenter != nullptr);
-				for (size_t i = 0; i < nbIndivs; ++i) {
-					IndivTypePtr o = this->indiv_at(i);
-					pCenter->add(o, false);
-				}// i
-				pCenter->update_center();
-				vCenter = pCenter->value();
-			}// center
-			const size_t nc = clusters.size();
-			assert(nc > 0);
-			vTotal = 0;
-			vInter = 0;
-			vIntra = 0;
-			for (size_t i = 0; i < nc; ++i) {
-				ClusterTypePtr c = clusters[i];
-				const ClusterType *pCluster = c.get();
-				assert(pCluster != nullptr);
-				Z x1 = 0;
-				pCluster->intra_inertia(x1);
-				vIntra = (Z)(vIntra + x1);
-				DataTypeArray  v = pCluster->value();
-				DataTypeArray t = v - vCenter;
-				DataTypeArray tt = t * t;
-				vInter = (Z)(vInter + tt.sum());
-			}// i
-			vInter = (Z)(vInter / nc);
-			vIntra = (Z)(vIntra / nc);
-			vTotal = (Z)(vInter + vIntra);
-		}// compute_stats
-		size_t clusterize(ClusterTypePtrVector &clusters,
-			const size_t nbClusters = 5,
-			const size_t nbIters = NB_ITER_MAX) {
-			assert(nbClusters > 0);
-			assert(nbIters > 0);
-			assert(this->is_valid());
-			size_t count = 0;
-			if (!this->check_data()) {
-				return (count);
-			}
-			size_t nc = nbClusters;
-			const size_t nbIndivs = this->indivs_count();
-			if (nc > nbIndivs) {
-				nc = nbIndivs;
-			}
-			clusters.resize(nc);
-			{
-				std::vector<size_t> oTemp(nbIndivs);
-				for (size_t i = 0; i < nbIndivs; ++i) {
-					oTemp[i] = i;
-				}// i
-				std::random_shuffle(oTemp.begin(), oTemp.end());
-				for (size_t i = 0; i < nc; ++i) {
-					size_t pos = oTemp[i];
-					IndivTypePtr oInd = this->indiv_at(pos);
-					IndivType *pInd = oInd.get();
-					assert(pInd != nullptr);
-					ClusterTypePtr o = std::make_shared<ClusterType>((IndexType)i, pInd->value());
-					ClusterType *pCluster = o.get();
-					assert(pCluster != nullptr);
-					pCluster->add(oInd, true);
-					clusters[i] = o;
-				}// i
-			}// init
-			IndexTypeMap oldMap;
-			this->aggreg_one_step(oldMap, clusters);
-			ClusterTypePtrVector oldClusters(clusters);
-			assert(oldMap.size() == nbIndivs);
-			for (size_t iter = 0; iter < nbIters; ++iter) {
-				IndexTypeMap curMap;
-				this->aggreg_one_step(curMap, clusters);
-				assert(curMap.size() == nbIndivs);
-				++count;
-				bool bDone = true;
-				for (auto it = oldClusters.begin(); it != oldClusters.end(); ++it) {
-					ClusterTypePtr c1 = *it;
-					const ClusterType *p1 = c1.get();
-					assert(p1 != nullptr);
-					bool bFound = false;
-					for (auto jt = clusters.begin(); jt != clusters.end(); ++jt) {
-						ClusterTypePtr c2 = *jt;
-						const ClusterType *p2 = c2.get();
-						assert(p2 != nullptr);
-						if (p1->same_set(*p2)) {
-							bFound = true;
-							break;
-						}
-					}// jt
-					if (!bFound) {
-						bDone = false;
-						break;
-					}
-				}// it
-				if (bDone) {
-					break;
-				}
-			}// iter
-			ClusterTypePtrVector temp;
-			for (auto it = clusters.begin(); it != clusters.end(); ++it) {
-				ClusterTypePtr c = *it;
-				ClusterType *pCluster = c.get();
-				assert(pCluster != nullptr);
-				if (!pCluster->empty()) {
-					temp.push_back(c);
-				}
-			}// it
-			if (temp.size() < clusters.size()) {
-				clusters = temp;
-			}
-			return count;
-		}// clusterize
-	protected:
-		size_t find_nearest_cluster(const ClusterTypePtrVector &cc, const IndivTypePtr &oInd) const {
-			const size_t nc = cc.size();
-			assert(nc > 0);
-			size_t imin = 0;
-			DistanceType dmin = this->distance(cc[0], oInd);
-			for (size_t i = 1; i < nc; ++i) {
-				DistanceType d = this->distance(cc[i], oInd);
-				if (d < dmin) {
-					dmin = d;
-					imin = i;
-				}
-			}// i
-			return imin;
-		}//find_nearest_cluster
-		void aggreg_one_step(IndexTypeMap &oMap, ClusterTypePtrVector &cc) const {
-			const size_t nc = cc.size();
-			const size_t n = this->indivs_count();
-			for (size_t i = 0; i < nc; ++i) {
-				ClusterTypePtr o = cc[i];
-				ClusterType *p = o.get();
-				assert(p != nullptr);
-				p->reset();
-			}
-			oMap.clear();
-			for (size_t i = 0; i < n; ++i) {
-				IndivTypePtr oInd = this->indiv_at(i);
-				size_t ipos = this->find_nearest_cluster(cc, oInd);
-				ClusterTypePtr c = cc[ipos];
-				ClusterType *pCluster = c.get();
-				assert(pCluster != nullptr);
-				pCluster->add(oInd, false);
-			}// i
-			for (size_t i = 0; i < nc; ++i) {
-				ClusterTypePtr c = cc[i];
-				ClusterType *pCluster = c.get();
-				assert(pCluster != nullptr);
-				pCluster->update_center();
-				const IndivTypePtrVector & vv = pCluster->members();
-				const size_t nn = vv.size();
-				const IndexType val = pCluster->index();
-				for (size_t j = 0; j < nn; ++j) {
-					IndivTypePtr oInd = vv[j];
-					const IndivType *pInd = oInd.get();
-					assert(pInd != nullptr);
-					const IndexType key = pInd->index();
-					oMap[key] = val;
-				}// i
-			}// i
-		}// aggreg_one_step
 		bool check_distance_func() {
 			if (this->_pfunc != nullptr) {
 				return (true);
@@ -343,7 +162,7 @@ namespace info {
 				this->_pfunc = p;
 				return (true);
 			}
-			_st_func.reset(new ManhattanDistanceFunc<DataType, DistanceType>());
+			_st_func.reset(new EuclideDistanceFunc<DataType, DistanceType>());
 			p = _st_func.get();
 			if (p != nullptr) {
 				this->_pfunc = p;
@@ -355,7 +174,6 @@ namespace info {
 			if (!this->is_valid()) {
 				return (false);
 			}
-			
 			IndivTypePtrVector &vv = this->_vec;
 			MatDataType *pData = this->_pdata;
 			DataMode m = this->_mode;
@@ -363,18 +181,21 @@ namespace info {
 			vv.resize(n);
 			for (size_t i = 0; i < n; ++i) {
 				DataTypeArray v;
+				StringType sid = pData->data_id_at(i, m);
 				pData->data_at(i, m, v);
 				IndexType aIndex = (IndexType)i;
-				vv[i] = std::make_shared<IndivType>(aIndex, v);
+				vv[i] = std::make_shared<IndivType>(aIndex, sid,v);
 			}// i
 			return (!vv.empty());
 		}// initialize_indivs
 	};// class Indivs<T,U,Z,S>
 	//////////////////////////////////
 	template <typename T, typename U, typename Z, class S>
+	const size_t Indivs<T, U, Z, S>::NB_DEFAULT_CLUSTERS = 7;
+	template <typename T, typename U, typename Z, class S>
 	const size_t Indivs<T, U, Z, S>::NB_ITER_MAX = 100;
 	template <typename T, typename U, typename Z, class S>
-	std::shared_ptr<ManhattanDistanceFunc<T, Z> > Indivs<T, U, Z, S>::_st_func;
+	std::shared_ptr<EuclideDistanceFunc<T, Z> > Indivs<T, U, Z, S>::_st_func;
 	//////////////////////////////////////
 }// namespace info
 ////////////////////////////////

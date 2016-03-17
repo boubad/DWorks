@@ -158,8 +158,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="infotestdata.h" />
     <ClInclude Include="src\cluster.h" />
     <ClInclude Include="src\clusterize.h" />
+    <ClInclude Include="src\clusterizeindivs.h" />
     <ClInclude Include="src\distance.h" />
     <ClInclude Include="src\indiv.h" />
     <ClInclude Include="src\indivs.h" />
@@ -172,6 +174,8 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="infotestdata.cpp" />
+    <ClCompile Include="MatDatatTest.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

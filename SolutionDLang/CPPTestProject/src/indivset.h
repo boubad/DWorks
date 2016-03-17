@@ -2,7 +2,6 @@
 #ifndef __INDIVSET_H__
 #define __INDIVSET_H__
 /////////////////////////////////
-#include <memory>
 #include <set>
 #include <vector>
 ///////////////////////////////////
@@ -16,10 +15,10 @@ namespace info {
 		typedef U IndexType;
 		typedef S StringType;
 		typedef std::valarray<T> DataTypeArray;
-		typedef Indiv<T, U, S> IndivType;
+		typedef Indiv<DataType, IndexType, StringType> IndivType;
 		typedef std::shared_ptr<IndivType> IndivTypePtr;
 		typedef std::vector<IndivTypePtr> IndivTypePtrVector;
-		typedef IndivSet<T, U, S> IndivSetType;
+		typedef IndivSet<DataType, IndexType, StringType> IndivSetType;
 	private:
 		IndivTypePtrVector _points;
 		std::vector<double> _sum;
@@ -325,5 +324,14 @@ namespace info {
 	}; // class IndivSet<T,U,S>
 	//////////////////////////////////////////
 }// namespace info
+//////////////////////////////////////
+template <typename T, typename U, class S>
+std::ostream & operator<<(std::ostream &os, const info::IndivSet<T, U, S> &d) {
+	return d.write_to(os);
+}
+template <typename T, typename U, class S>
+std::wostream & operator<<(std::wostream &os, const info::IndivSet<T, U, S> &d) {
+	return d.write_to(os);
+}
 /////////////////////////////////
 #endif // !__INDIVSET_H__
