@@ -60,6 +60,9 @@
     <ClInclude Include="src\clusterizeindivs.h">
       <Filter>Header Files\src</Filter>
     </ClInclude>
+    <ClInclude Include="src\resultitem.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -72,6 +75,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MatDatatTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ClusterizeTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -131,18 +131,6 @@ namespace info {
 			}
 		}// distance
 	public:
-		virtual std::ostream & write_to(std::ostream &os) const {
-			os << "{" << this->_index << ",\t" << this->id()  << ",\t[";
-			const size_t n = this->_data.size();
-			for (size_t i = 0; i < n; ++i) {
-				if (i > 0) {
-					os << ", ";
-				}
-				os << this->_data[i];
-			}// i
-			os << "] }";
-			return (os);
-		}// write_to
 		virtual std::wostream & write_to(std::wostream &os) const {
 			os << L"{" << this->_index << L",\t" << this->id() << L",\t[";
 			const size_t n = this->_data.size();

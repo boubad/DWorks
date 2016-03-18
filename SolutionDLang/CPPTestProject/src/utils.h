@@ -12,6 +12,7 @@
 ////////////////////////////////////////
 namespace info {
 	///////////////////////////////////////////////
+#ifdef TOTO
 	size_t convert_int_to_binary_string(const int n, std::wstring &sRet) {
 		assert(n >= 0);
 		sRet.clear();
@@ -33,6 +34,7 @@ namespace info {
 		}
 		return (sRet.size());
 	}// convert_int_to_binary_string
+#endif
 #ifdef TOTO
 	size_t convert_int_to_binary_string(const int n, std::string &sRet) {
 		assert(n >= 0);

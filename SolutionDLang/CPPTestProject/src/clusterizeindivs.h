@@ -2,6 +2,7 @@
 #ifndef __CLUSTERIZEINDIVS_H__
 #define __CLUSTERIZEINDIVS_H__
 /////////////////////////////////
+#include "resultitem.h"
 #include "indivs.h"
 /////////////////////////////////////////
 namespace info {
@@ -23,16 +24,18 @@ namespace info {
 		typedef IndivSet<DataType, IndexType, StringType> ClusterType;
 		typedef std::shared_ptr<ClusterType> ClusterTypePtr;
 		typedef std::vector<ClusterTypePtr> ClusterTypePtrVector;
-		typedef std::map<IndexType, IndexType> IndexTypeMap;
+		typedef std::set<IndexType> IndexTypeSet;
+		typedef std::map<IndexType, IndexTypeSet> IndexTypeMap;
 		//
 		typedef Indivs<DataType, IndexType, DistanceType, StringType> IndivsType;
-		typedef ClusterizeIndivs<T, U, Z, S> ClusterizeIndivsType;
+		typedef ClusterizeIndivs<DataType, IndexType, DistanceType, StringType> ClusterizeIndivsType;
+		typedef ResultItem<IndexType, size_t> ResultItemType;
 	private:
-		IndivsType *_pIndivs;
+		const IndivsType *_pIndivs;
 		ClusterTypePtrVector _clusters;
 	public:
 		ClusterizeIndivs() :_pIndivs(nullptr) {}
-		ClusterizeIndivs(IndivsType *pIndivs, const ClusterTypePtrVector *pc = nullptr) :_pIndivs(pIndivs) {
+		ClusterizeIndivs(const IndivsType *pIndivs, const ClusterTypePtrVector *pc = nullptr) :_pIndivs(pIndivs) {
 			assert(this->_pIndivs != nullptr);
 			assert(this->_pIndivs->is_valid());
 			assert(this->_pIndivs->indivs_count() > 2);
@@ -60,24 +63,41 @@ namespace info {
 		const ClusterType *cluster_at(const size_t i) const {
 			const ClusterTypePtrVector & clusters = this->_clusters;
 			assert(i < clusters.size());
-			const ClusterType *p = (clusters[i]).get();
+			const ClusterTypePtr &c = clusters[i];
+			const ClusterType *p = c.get();
 			assert(p != nullptr);
 			return (p);
 		}// cluster_at
 	public:
-		size_t clusterize(const size_t nbClusters = IndivsType::NB_DEFAULT_CLUSTERS,
-			const size_t IndivsType::nbIters = NB_ITER_MAX) {
+		void multi_clusterize(ResultItemType &oResult,
+			const size_t nCount = 100,
+			const size_t nbClusters = IndivsType::NB_DEFAULT_CLUSTERS,
+			const size_t nbIters = IndivsType::NB_ITER_MAX) {
+			oResult.reset();
+			for (size_t i = 0; i < nCount; ++i) {
+				IndexTypeMap resultMap;
+				this->clusterize(resultMap, nbClusters, nbIters);
+				for (auto it = resultMap.begin(); it != resultMap.end(); ++it) {
+					auto oSet = (*it).second;
+					oResult.increment(oSet);
+				}// it
+			}// i
+		}//multi_clusterize
+		size_t clusterize(IndexTypeMap &resultMap,
+			const size_t nbClusters = IndivsType::NB_DEFAULT_CLUSTERS,
+			const size_t nbIters = IndivsType::NB_ITER_MAX) {
 			assert(nbClusters > 0);
 			assert(nbIters > 0);
 			assert(this->is_valid());
 			ClusterTypePtrVector &clusters = this->_clusters;
-			IndivsType *pIndivs = this->_pIndivs;
+			const IndivsType *pIndivs = this->_pIndivs;
 			size_t count = 0;
 			size_t nc = nbClusters;
-			const size_t nbIndivs = this->indivs_count();
-			if (nc > nbIndivs) {
-				nc = nbIndivs;
+			const size_t nbIndivs = pIndivs->indivs_count();
+			if (nc >= nbIndivs) {
+				nc = (size_t)(nbIndivs - 1);
 			}
+			assert(nc > 0);
 			clusters.resize(nc);
 			{
 				std::vector<size_t> oTemp(nbIndivs);
@@ -86,45 +106,37 @@ namespace info {
 				}// i
 				std::random_shuffle(oTemp.begin(), oTemp.end());
 				for (size_t i = 0; i < nc; ++i) {
-					size_t pos = oTemp[i];
-					IndivTypePtr oInd = pIndivs->indiv_at(pos);
-					IndivType *pInd = oInd.get();
+					size_t ipos = oTemp[i];
+					const IndivType *pInd = pIndivs->indiv(ipos);
 					assert(pInd != nullptr);
-					ClusterTypePtr o = std::make_shared<ClusterType>((IndexType)i, pInd->value());
+					ClusterTypePtr o = std::make_shared<ClusterType>((IndexType)i, pInd->id(), pInd->value());
 					ClusterType *pCluster = o.get();
 					assert(pCluster != nullptr);
-					pCluster->add(oInd, true);
+					pCluster->add(o, true);
 					clusters[i] = o;
 				}// i
 			}// init
 			IndexTypeMap oldMap;
 			this->aggreg_one_step(oldMap);
-			assert(oldMap.size() == nbIndivs);
-			ClusterTypePtrVector oldClusters(clusters);
 			for (size_t iter = 0; iter < nbIters; ++iter) {
-				IndexTypeMap curMap;
-				this->aggreg_one_step(curMap, clusters);
-				assert(curMap.size() == nbIndivs);
+				this->aggreg_one_step(resultMap);
 				++count;
 				bool bDone = true;
-				for (auto it = oldClusters.begin(); it != oldClusters.end(); ++it) {
-					ClusterTypePtr c1 = *it;
-					const ClusterType *p1 = c1.get();
-					assert(p1 != nullptr);
-					bool bFound = false;
-					for (auto jt = clusters.begin(); jt != clusters.end(); ++jt) {
-						ClusterTypePtr c2 = *jt;
-						const ClusterType *p2 = c2.get();
-						assert(p2 != nullptr);
-						if (p1->same_set(*p2)) {
-							bFound = true;
+				for (auto it = oldMap.begin(); it != oldMap.end(); ++it) {
+					if (!bDone) {
+						break;
+					}
+					const IndexType key = (*it).first;
+					const IndexTypeSet &oldSet = (*it).second;
+					assert(resultMap.find(key) != resultMap.end());
+					const IndexTypeSet &curSet = resultMap[key];
+					for (auto jt = oldSet.begin(); jt != oldSet.end(); ++jt) {
+						const IndexType val = *jt;
+						if (curSet.find(val) == curSet.end()) {
+							bDone = false;
 							break;
 						}
 					}// jt
-					if (!bFound) {
-						bDone = false;
-						break;
-					}
 				}// it
 				if (bDone) {
 					break;
@@ -183,8 +195,19 @@ namespace info {
 			vTotal = (DistanceType)(vInter + vIntra);
 		}// compute_stats
 	protected:
+		void copy_clusters(ClusterTypePtrVector &oRes) const {
+			const ClusterTypePtrVector &vs = this->_clusters;
+			const size_t nc = vs.size();
+			oRes.resize(nc);
+			for (size_t i = 0; i < nc; ++i) {
+				const ClusterTypePtr &o = vs[i];
+				const ClusterType *p = o.get();
+				assert(p != nullptr);
+				oRes[i] = std::make_shared<ClusterType>(*p);
+			}// i
+		}//copy_clusters 
 		size_t find_nearest_cluster(const IndivTypePtr &oInd) const {
-			IndivsType *pIndivs = this->_pIndivs;
+			const IndivsType *pIndivs = this->_pIndivs;
 			assert(pIndivs != nullptr);
 			assert(oInd.get() != nullptr);
 			const ClusterTypePtrVector &cc = this->_clusters;
@@ -202,7 +225,7 @@ namespace info {
 			return imin;
 		}//find_nearest_cluster
 		void aggreg_one_step(IndexTypeMap &oMap) {
-			IndivsType *pIndivs = this->_pIndivs;
+			const IndivsType *pIndivs = this->_pIndivs;
 			assert(pIndivs != nullptr);
 			ClusterTypePtrVector &cc = this->_clusters;
 			const size_t nc = cc.size();
@@ -215,8 +238,8 @@ namespace info {
 			}
 			oMap.clear();
 			for (size_t i = 0; i < n; ++i) {
-				IndivTypePtr oInd = pIndivs->indiv_at(i);
-				size_t ipos = this->find_nearest_cluster(cc, oInd);
+				const IndivTypePtr oInd = pIndivs->indiv_at(i);
+				size_t ipos = this->find_nearest_cluster(oInd);
 				ClusterTypePtr c = cc[ipos];
 				ClusterType *pCluster = c.get();
 				assert(pCluster != nullptr);
@@ -229,14 +252,16 @@ namespace info {
 				pCluster->update_center();
 				const IndivTypePtrVector & vv = pCluster->members();
 				const size_t nn = vv.size();
-				const IndexType val = pCluster->index();
+				IndexTypeSet oSet;
+				const IndexType key = pCluster->index();
 				for (size_t j = 0; j < nn; ++j) {
 					IndivTypePtr oInd = vv[j];
 					const IndivType *pInd = oInd.get();
 					assert(pInd != nullptr);
 					const IndexType key = pInd->index();
-					oMap[key] = val;
-				}// i
+					oSet.insert(key);
+				}// j
+				oMap[key] = oSet;
 			}// i
 		}// aggreg_one_step
 	};// class ClusterizeIndivs<T,U,Z,S>

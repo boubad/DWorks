@@ -23,8 +23,8 @@ namespace info {
 		typedef Indiv<DataType, IndexType, StringType> IndivType;
 		typedef std::shared_ptr<IndivType> IndivTypePtr;
 		typedef std::vector<IndivTypePtr> IndivTypePtrVector;
-		//typedef IndivSet<DataType, IndexType, StringType> ClusterType;
-		//typedef std::shared_ptr<ClusterType> ClusterTypePtr;
+		typedef IndivSet<DataType, IndexType, StringType> ClusterType;
+		typedef std::shared_ptr<ClusterType> ClusterTypePtr;
 		//typedef std::vector<ClusterTypePtr> ClusterTypePtrVector;
 		//typedef std::map<IndexType, IndexType> IndexTypeMap;
 		//
@@ -34,7 +34,7 @@ namespace info {
 		MatDataType *_pdata;
 		DistanceFuncType *_pfunc;
 		IndivTypePtrVector _vec;
-	protected:
+	public:
 		static const size_t NB_ITER_MAX;
 		static const size_t NB_DEFAULT_CLUSTERS;
 		static std::shared_ptr<EuclideDistanceFunc<DataType, DistanceType> > _st_func;
@@ -76,7 +76,7 @@ namespace info {
 		}// set_data
 		bool is_valid(void) const {
 			return ((this->_mode != DataMode::noMode) && (this->_pdata != nullptr) &&
-				(this->_pdata->is_valid()));
+				(this->_pfunc != nullptr) && (this->_pdata->is_valid()));
 		}
 		DataMode mode(void) const {
 			return (this->_mode);
@@ -97,6 +97,39 @@ namespace info {
 			assert(ipos < this->_vec.size());
 			return ((this->_vec)[ipos]);
 		}
+		const IndivType *indiv(const size_t ipos) const {
+			assert(ipos < this->_vec.size());
+			const IndivTypePtr &o = this->_vec[ipos];
+			const IndivType *p = o.get();
+			assert(p != nullptr);
+			return p;
+		}
+		const IndivType *find_indiv_by_index(const IndexType aIndex) const {
+			const IndivTypePtrVector &vv = this->_vec;
+			auto iend = vv.end();
+			for (auto it = vv.begin(); it != iend; ++it) {
+				const IndivTypePtr c = *it;
+				const IndivType *pInd = c.get();
+				assert(pInd != nullptr);
+				if (pInd->index() == aIndex) {
+					return (pInd);
+				}
+			}// it
+			return (nullptr);
+		}//find_indiv_by_index
+		const IndivType *find_indiv_by_id(const StringType &sId) const {
+			const IndivTypePtrVector &vv = this->_vec;
+			auto iend = vv.end();
+			for (auto it = vv.begin(); it != iend; ++it) {
+				const IndivTypePtr c = *it;
+				const IndivType *pInd = c.get();
+				assert(pInd != nullptr);
+				if (pInd->id() == sId) {
+					return (pInd);
+				}
+			}// it
+			return (nullptr);
+		}//find_indiv_by_id
 		DistanceType distance(const IndivType *pInd1, const IndivType *pInd2) const {
 			assert(pInd1 != nullptr);
 			assert(pInd2 != nullptr);

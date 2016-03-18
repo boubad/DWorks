@@ -3,6 +3,7 @@
 #define __DISTANCE_H__
 /////////////////////////
 #include <cassert>
+#include <cmath>
 #include <valarray>
 /////////////////////////////
 namespace info {
@@ -113,9 +114,11 @@ namespace info {
 		virtual Z perform_compute(const std::valarray<T> &v1, const std::valarray<T> &v2) const {
 			const size_t n = v1.size();
 			assert(v2.size() == n);
+			assert(n > 0);
 			std::valarray<T> t = v1 - v2;
 			std::valarray<T> t1 = t * t;
-			return (Z)t1.sum();
+			double d = (double)t1.sum() / n;
+			return (Z)std::sqrt(d);
 		}// perform_compute
 		virtual Z compute_one_step(const T v1, const T v2, const size_t /*pos = 0*/) const {
 			Z t = (Z)(v2 - v1);

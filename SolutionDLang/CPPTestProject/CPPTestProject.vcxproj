@@ -167,6 +167,7 @@
     <ClInclude Include="src\indivs.h" />
     <ClInclude Include="src\indivset.h" />
     <ClInclude Include="src\matdata.h" />
+    <ClInclude Include="src\resultitem.h" />
     <ClInclude Include="src\treeelem.h" />
     <ClInclude Include="src\utils.h" />
     <ClInclude Include="src\variable.h" />
@@ -174,6 +175,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ClusterizeTest.cpp" />
     <ClCompile Include="infotestdata.cpp" />
     <ClCompile Include="MatDatatTest.cpp" />
     <ClCompile Include="stdafx.cpp">

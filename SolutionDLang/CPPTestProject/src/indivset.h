@@ -267,33 +267,6 @@ namespace info {
 			return this->add(oo, bUpdate);
 		}// add
 	public:
-		virtual std::ostream & write_to(std::ostream &os) const {
-			double var = 0;
-			double tx = 0;
-			this->intra_inertia(tx);
-			this->intra_variance(var);
-			os << "{" << std::endl;
-			os << "\tindex: " << this->index() << std::endl;
-			os << "\tid: " << std::endl;
-			os << "\ttrace: " << this->trace() << std::endl;
-			os << "\tintra-inertia: " << tx << std::endl;
-			os << "\tintra-variance: " << var << std::endl;
-			os << "\tcenter: ";
-			IndivType::write_to(os);
-			os << std::endl;
-			os << "\tmembers: ";
-			auto vv = this->_points;
-			for (auto it = vv.begin(); it != vv.end(); ++it) {
-				os << "\t\t";
-				IndivTypePtr o = *it;
-				const IndivType *p = o.get();
-				assert(p != nullptr);
-				p->write_to(os);
-				os << std::endl;
-			}// it
-			os << "}";
-			return os;
-		}// write_to
 		virtual std::wostream & write_to(std::wostream &os) const {
 			double var = 0;
 			double tx = 0;

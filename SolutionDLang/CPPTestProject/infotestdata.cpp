@@ -26,7 +26,7 @@ int InfoTestData::st_socmortal_data[] = {241,16,330,43,363,325,
 const wchar_t *InfoTestData::st_socmortal_vars[] = { L"SUICI",L"HOMIC",L"AROUT",L"AINDU",L"AAUTR",L"CIRFO"};
 const wchar_t *InfoTestData::st_socmortal_inds[] = {L"AUTRICHE",L"FRANCE",L"PORTUGAL",L"ALLFEDER",L"BELGIQUE",
 									L"FINLANDE",L"SUEDE",L"SUISSE",L"ITALIE",L"IRLNORD",
-									L"DANNEMARK",L"ISLANDE",L"ECOSSE",L"ESOAGNE",L"NORVEGE",
+									L"DANNEMARK",L"ISLANDE",L"ECOSSE",L"ESPAGNE",L"NORVEGE",
 									L"IRLSUD",L"PABAS",L"ANGGALLE",L"USA"};
 /////////////////////////////////////
 InfoTestData::InfoTestData()
