@@ -57,7 +57,7 @@ namespace info {
 			return (this->_index);
 		}
 		void index(const IndexType aIndex) {
-			assert(oIndex >= 0);
+			assert(aIndex >= 0);
 			this->_index = aIndex;
 		}
 		const StringType & id(void) const {

@@ -299,10 +299,6 @@ namespace info {
 }// namespace info
 //////////////////////////////////////
 template <typename T, typename U, class S>
-std::ostream & operator<<(std::ostream &os, const info::IndivSet<T, U, S> &d) {
-	return d.write_to(os);
-}
-template <typename T, typename U, class S>
 std::wostream & operator<<(std::wostream &os, const info::IndivSet<T, U, S> &d) {
 	return d.write_to(os);
 }
