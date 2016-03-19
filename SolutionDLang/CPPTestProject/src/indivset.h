@@ -67,7 +67,7 @@ namespace info {
 		}// intra_inertia
 		template <typename Z>
 		void intra_variance(Z &dist) const {
-			dist  = 0;
+			dist = 0;
 			const IndivTypePtrVector &v1 = this->_points;
 			const size_t n = v1.size();
 			size_t count = 0;
@@ -120,6 +120,16 @@ namespace info {
 		}// same_set
 		const IndivTypePtrVector & members(void) const {
 			return (this->_points);
+		}
+		const size_t members_size(void) const {
+			return (this->_points.size());
+		}
+		const IndivType *member_at(const size_t i) const {
+			assert(i < this->_points.size());
+			const IndivTypePtr &c = this->_points[i];
+			const IndivType *p = c.get();
+			assert(p != nullptr);
+			return p;
 		}
 		void reset(void) {
 			this->_points.clear();
@@ -294,6 +304,7 @@ namespace info {
 			os << L"}";
 			return os;
 		}// write_to
+		
 	}; // class IndivSet<T,U,S>
 	//////////////////////////////////////////
 }// namespace info

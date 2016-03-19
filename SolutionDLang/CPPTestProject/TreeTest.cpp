@@ -45,23 +45,30 @@ namespace CPPTestProject
 			StringTypeVector colNames;
 			size_t nCols = 0;
 			size_t nRows = 0;
-			std::valarray<double> data;
+			DataType maxVal = 255;
+			DataType minVal = 0;
+			std::valarray<DataType> data;
 			InfoTestData::get(nRows, nCols, data, &rowNames, &colNames);
 			Assert::IsTrue(nCols > 1);
 			Assert::IsTrue(nRows > 5);
 			const size_t nTotal = (size_t)(nCols * nRows);
 			Assert::AreEqual(nTotal, data.size());
-			MatData<double> oMat(nRows, nCols, &data, &rowNames, &colNames);
-			std::valarray<double> oTransfData;
-			bool b = oMat.normalize_data(oTransfData);
-			Assert::IsTrue(b);
-			MatData<double> xMat(nRows, nCols, &oTransfData, &rowNames, &colNames);
+			MatDataType oMat(nRows, nCols, &data, &rowNames, &colNames);
+			std::valarray<DataType> oTransfData;
+			{
+				std::valarray<double> t;
+				oMat.normalize_data(t);
+				MatData<double> zMat(nRows, nCols, &t);
+				bool b = zMat.recode_data(oTransfData, maxVal, minVal);
+				Assert::IsTrue(b);
+			}
+			MatDataType xMat(nRows, nCols, &oTransfData, &rowNames, &colNames);
 			//
-			Indivs<double, int, double> oIndivs(&xMat);
+			IndivsType oIndivs(&xMat);
 			std::wstringstream os;
 			//////////////////////////////////
-			Tree<double, int, double> oTree(&oIndivs);
 			const size_t nClasses = 5;
+			TreeType oTree(&oIndivs);
 			oTree.initialize();
 			oTree.aggregate(nClasses);
 			const size_t nn = oTree.size();
@@ -69,13 +76,19 @@ namespace CPPTestProject
 			for (size_t i = 0; i < nn; ++i) {
 				auto pElem = oTree.element_at(i);
 				Assert::IsNotNull(pElem);
-				IndivSet<double, int> oCluster;
+				ClusterType oCluster;
 				pElem->convert_to_clusters(oCluster);
 				os << L"Cluster " << oCluster.index() << std::endl << oCluster << std::endl;
 			}// ii
 			 /////////////////////
 			std::wstring sd = os.str();
 			Logger::WriteMessage(sd.c_str());
+			////////////////////////////////
+			std::wstringstream os2;
+			os2 << std::endl << "DOT FILE" << std::endl;
+			oTree.writeDot(os2);
+			std::wstring sd2 = os2.str();
+			Logger::WriteMessage(sd2.c_str());
 		}// estClusterizeIndivsDouble
 	};
 }

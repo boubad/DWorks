@@ -77,6 +77,12 @@ namespace CPPTestProject
 			 /////////////////////
 			std::wstring sd = os.str();
 			Logger::WriteMessage(sd.c_str());
+			////////////////////////////////
+			std::wstringstream os2;
+			oClusters.writeDot(os2);
+			std::wstring sd2 = os2.str();
+			Logger::WriteMessage(sd2.c_str());
+			///////////////////////////////
 		}// TestClusterizeIndivs
 		TEST_METHOD(TestClusterizeIndivsDouble)
 		{

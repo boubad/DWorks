@@ -93,6 +93,39 @@ namespace info {
 			os << L"}" << std::endl;
 			return os;
 		}// write_to
+		std::wostream & writeDot(std::wostream &out) const
+		{
+			out << std::endl;
+			out << L"digraph G { " << std::endl;
+			out << L"size = \"4,4\";" << std::endl;
+			const TreeElemTypePtrVector &vv = this->children();
+			const size_t n = vv.size();
+			if (n == 0)
+			{
+				IndexType nId = this->index();
+				std::wstringstream os;
+				os << L" [" << nId << L"] ";
+				const StringType &ss = this->id();
+				if (!ss.empty())
+				{
+					os << ss << L" ";
+				}
+				std::wstring slabel = os.str();
+				out << nId << L" [shape = box,style=filled,color=yellow, label=\""
+					<< slabel << L"\"];" << std::endl;
+			}
+			else
+			{
+				for (size_t i = 0; i < n; ++i)
+				{
+					const TreeElemTypePtr &pp = vv[i];
+					const TreeElemType *p = pp.get();
+					p->internalWriteTo(out);
+				} // i
+			}
+			out << L"}" << std::endl;
+			return (out);
+		} // writeDot
 	public:
 		DistanceType linkDistance(void) const {
 			return (this->_dist);
@@ -191,7 +224,7 @@ namespace info {
 						}
 					}// i
 				}
-				break;
+										break;
 				case LinkMode::linkMean:
 				{
 					for (size_t i = 1; i < n2; ++i) {
@@ -302,7 +335,7 @@ namespace info {
 			const size_t nCols = dd.size();
 			assert(nCols > 0);
 			double zero = 0.0;
-			std::vector<double> sum(nCols,zero);
+			std::vector<double> sum(nCols, zero);
 			for (size_t i = 0; i < n; ++i) {
 				const TreeElemTypePtr &t = vv[i];
 				const TreeElemType *p = t.get();
@@ -320,7 +353,7 @@ namespace info {
 			IndivTypePtr oCenter = this->_center;
 			IndivType *pCenter = oCenter.get();
 			if (pCenter == nullptr) {
-				this->_center = std::make_shared<IndivType>(this->index(),val);
+				this->_center = std::make_shared<IndivType>(this->index(), val);
 			}
 			else {
 				pCenter->value(val);
@@ -389,6 +422,40 @@ namespace info {
 			}// i
 			cluster.update_center();
 		}// convert_to_clusters
+	public:
+		std::wostream & internalWriteTo(std::wostream &out) const
+		{
+			const TreeElemTypePtrVector &vv = this->children();
+			const size_t n = vv.size();
+			const size_t nId = (size_t) this->index();
+			if (n == 0)
+			{
+				std::wstringstream os;
+				os << L" [" << nId << L"] ";
+				const StringType & ss = this->id();
+				if (!ss.empty())
+				{
+					os << ss << L" ";
+				}
+				std::wstring slabel = os.str();
+				out << nId << L" [shape = box,style=filled,color=yellow, label=\""
+					<< slabel << L"\"];" << std::endl;
+			}
+			else
+			{
+				out << nId << L" [label=\"S" << nId << L"\\nVar = "
+					<< this->linkDistance() << L"\"];" << std::endl;
+				for (size_t i = 0; i < n; ++i)
+				{
+					const TreeElemTypePtr &pp = vv[i];
+					const TreeElemType *p = pp.get();
+					assert(p != nullptr);
+					p->internalWriteTo(out);
+					out << nId << L" -> " << p->index() << L";" << std::endl;
+				} // i
+			}
+			return (out);
+		} // internalWriteTo
 	};// class TreeElem<T,U,Z,S>
 	/////////////////////////////////////////
 	template <typename T = int, typename U = int, typename Z = long, class S = std::wstring>
@@ -421,12 +488,12 @@ namespace info {
 		TreeElemTypePtrVector _elems;
 		std::vector<DistanceType> _distances;
 	public:
-		Tree() :_pinds(nullptr),_link(LinkMode::noLink) {}
+		Tree() :_pinds(nullptr), _link(LinkMode::noLink) {}
 		Tree(const IndivsType *pMat,
-			const LinkMode m = LinkMode::linkMean) :_pinds(pMat),_link(m) {
+			const LinkMode m = LinkMode::linkMean) :_pinds(pMat), _link(m) {
 			this->initialize();
 		}
-		Tree(const TreeType &other) :_pinds(other._pinds),_link(other._link), _elems(other._elems),
+		Tree(const TreeType &other) :_pinds(other._pinds), _link(other._link), _elems(other._elems),
 			_distances(other._distances) {}
 		TreeType & operator=(const TreeType &other) {
 			if (this != &other) {
@@ -480,7 +547,7 @@ namespace info {
 				const IndivType *pCenter = oCenter.get();
 				assert(pCenter != nullptr);
 				const IndexType aIndex = (IndexType)i;
-				TreeElemTypePtr t = std::make_shared<TreeElemType>(aIndex, order, dist,pCenter->id(),oCenter);
+				TreeElemTypePtr t = std::make_shared<TreeElemType>(aIndex, order, dist, pCenter->id(), oCenter);
 				assert(t.get() != nullptr);
 				vv[i] = t;
 			}// i
@@ -495,6 +562,43 @@ namespace info {
 				}
 			}// while size
 		}// aggregate
+		std::wostream & writeDot(std::wostream &out) const
+		{
+			out << std::endl;
+			out << L"digraph G { " << std::endl;
+			out << L"size = \"4,4\";" << std::endl;
+			const TreeElemTypePtrVector &vv = this->_elems;
+			const size_t n = vv.size();
+			if (n < 1)
+			{
+				return (out);
+			}
+			size_t nId = 0;
+			for (size_t i = 0; i < n; ++i) {
+				const TreeElemTypePtr &pp = vv[i];
+				const TreeElemType *p = pp.get();
+				assert(p != nullptr);
+				const size_t nx = (size_t)p->index();
+				if (i == 0) {
+					nId = nx;
+				}
+				else if (nx > nId) {
+					nId = nx;
+				}
+			}// i
+			++nId;
+			out << nId << L" [label=\"ROOT\"];" << std::endl;
+			for (size_t i = 0; i < n; ++i)
+			{
+				const TreeElemTypePtr &pp = vv[i];
+				const TreeElemType *p = pp.get();
+				assert(p != nullptr);
+				p->internalWriteTo(out);
+				out << nId << L" -> " << p->index() << L";" << std::endl;
+			} // i
+			out << L"}" << std::endl;
+			return (out);
+		} // writeDot
 	private:
 		bool aggreg_one_step(size_t &nOrder) {
 			typedef std::set<size_t> MySet;
@@ -578,7 +682,6 @@ namespace info {
 			++nOrder;
 			for (auto it = chMap.begin(); it != chMap.end(); ++it) {
 				TreeElemTypePtrVector vr = (*it).second;
-				IndivTypePtr oCenter;
 				TreeElemTypePtr t = std::make_shared<TreeElemType>(++indexMax, nOrder, dMin);
 				TreeElemType *p = t.get();
 				assert(p != nullptr);

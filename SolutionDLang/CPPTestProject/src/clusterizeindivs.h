@@ -194,6 +194,70 @@ namespace info {
 			vIntra = (DistanceType)(vIntra / nc);
 			vTotal = (DistanceType)(vInter + vIntra);
 		}// compute_stats
+		std::wostream & writeDot(std::wostream &out) const
+		{
+			out << std::endl;
+			out << L"digraph G { " << std::endl;
+			out << L"size = \"4,4\";" << std::endl;
+			const ClusterTypePtrVector &vv = this->_clusters;
+			const size_t n = vv.size();
+			if (n < 1)
+			{
+				return (out);
+			}
+			IndexType nId = 0;
+			for (size_t i = 0; i < n; ++i) {
+				const  ClusterTypePtr &pp = vv[i];
+				const ClusterType *p = pp.get();
+				assert(p != nullptr);
+				const IndexType nx = p->index();
+				if (i == 0) {
+					nId = nx;
+				}
+				else if (nx > nId) {
+					nId = nx;
+				}
+				const size_t nn = p->members_size();
+				for (size_t j = 0; j < nn; ++j) {
+					const IndivType *pz = p->member_at(j);
+					const IndexType ny = p->index();
+					if (ny > nId) {
+						nId = ny;
+					}
+				}
+			}// i
+			nId = (IndexType)(nId + 2);
+			out << nId << L" [label=\"ROOT\"];" << std::endl;
+			for (size_t i = 0; i < n; ++i)
+			{
+				const  ClusterTypePtr &pp = vv[i];
+				const ClusterType *p = pp.get();
+				assert(p != nullptr);
+				IndexType nx = (IndexType)(p->index() + nId + 1);
+				double tx = 0;
+				p->intra_inertia(tx);
+				out << nx << L" [label=\"CLUSTER " << p->index() << L"\\nVar = "
+					<< tx << L"\"];" << std::endl;
+				out << nId << L" -> " << nx << L";" << std::endl;
+				const size_t nn = p->members_size();
+				for (size_t j = 0; j < nn; ++j) {
+					const IndivType *pInd = p->member_at(j);
+					const IndexType nk = (IndexType)(pInd->index() +  2 * nId + 1);
+					std::wstringstream os;
+					StringType  ssx = pInd->id();
+					if (!ssx.empty())
+					{
+						os << ssx << L" ";
+					}
+					std::wstring slabel = os.str();
+					out << nk << L" [shape = box,style=filled,color=yellow, label=\""
+						<< slabel << L"\"];" << std::endl;
+					out << nx << L" -> " << nk << L";" << std::endl;
+				}// j
+			} // i
+			out << L"}" << std::endl;
+			return (out);
+		} // writeDot
 	protected:
 		void copy_clusters(ClusterTypePtrVector &oRes) const {
 			const ClusterTypePtrVector &vs = this->_clusters;
