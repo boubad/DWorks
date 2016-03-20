@@ -149,7 +149,7 @@ namespace info {
 			assert(p2 != nullptr);
 			return this->distance(p1, p2);
 		}// distance
-		DistanceType distance_index(const size_t i, const size_t i2) const {
+		DistanceType distance_index(const size_t i1, const size_t i2) const {
 			const IndivTypePtrVector & vv = this->_vec;
 			assert(i1 < vv.size());
 			assert(i2 < vv.size());
@@ -176,6 +176,21 @@ namespace info {
 			assert(p2 != nullptr);
 			return this->distance(p1, p2);
 		}// distance
+		template <typename X>
+		void compute_distances(std::vector<X> &dist) const {
+			assert(this->is_valid());
+			const size_t n = this->indivs_count();
+			assert(n > 0);
+			dist.resize(n * n);
+			for (size_t i = 0; i < n; ++i) {
+				dist[i * n + i] = 0;
+				for (size_t j = i + 1; j < n; ++j) {
+					X d = (X) this->distance_index(i, j);
+					dist[i * n + j] = d;
+					dist[j * n + i] = d;
+				}// j
+			}// i
+		}// compute_distances
 	protected:
 		bool check_data(void) {
 			if (!this->_vec.empty()) {

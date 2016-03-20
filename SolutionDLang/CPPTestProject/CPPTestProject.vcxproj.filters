@@ -63,6 +63,9 @@
     <ClInclude Include="src\resultitem.h">
       <Filter>Header Files\src</Filter>
     </ClInclude>
+    <ClInclude Include="src\arrangedesc.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -81,6 +84,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TreeTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ArrangeTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

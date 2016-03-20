@@ -159,6 +159,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="infotestdata.h" />
+    <ClInclude Include="src\arrangedesc.h" />
     <ClInclude Include="src\cluster.h" />
     <ClInclude Include="src\clusterize.h" />
     <ClInclude Include="src\clusterizeindivs.h" />
@@ -175,6 +176,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ArrangeTest.cpp" />
     <ClCompile Include="ClusterizeTest.cpp" />
     <ClCompile Include="infotestdata.cpp" />
     <ClCompile Include="MatDatatTest.cpp" />
