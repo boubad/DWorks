@@ -139,8 +139,7 @@ namespace info {
 			return (r);
 		}// distance
 		DistanceType distance(const IndivType &pInd1, const IndivType &pInd2) const {
-			this->distance(&pInd2, &pInd2);
-			return (r);
+			return (this->distance(&pInd2, &pInd2));
 		}// distance
 		DistanceType distance(const IndivTypePtr &oInd1, const IndivTypePtr &oInd2) const {
 			const IndivType *p1 = oInd1.get();
