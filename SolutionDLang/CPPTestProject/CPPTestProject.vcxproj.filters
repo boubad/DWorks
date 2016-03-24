@@ -66,6 +66,9 @@
     <ClInclude Include="src\arrangedesc.h">
       <Filter>Header Files\src</Filter>
     </ClInclude>
+    <ClInclude Include="src\matelem.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
