@@ -190,6 +190,21 @@ namespace info {
 				}// j
 			}// i
 		}// compute_distances
+		template <typename X>
+		void compute_distances(std::valarray<X> &dist) const {
+			assert(this->is_valid());
+			const size_t n = this->indivs_count();
+			assert(n > 0);
+			dist.resize(n * n);
+			for (size_t i = 0; i < n; ++i) {
+				dist[i * n + i] = 0;
+				for (size_t j = i + 1; j < n; ++j) {
+					X d = (X) this->distance_index(i, j);
+					dist[i * n + j] = d;
+					dist[j * n + i] = d;
+				}// j
+			}// i
+		}// compute_distances
 	protected:
 		bool check_data(void) {
 			if (!this->_vec.empty()) {

@@ -3,6 +3,7 @@
 ///////////////////////////////////
 #include "infotestdata.h"
 ///////////////////
+#include <indivs.h>
 #include <matelem.h>
 //////////////////////////////////////
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -31,7 +32,7 @@ namespace CPPTestProject
 	//
 	typedef Indivs<DataType, IndexType, DistanceType, StringType> IndivsType;
 	typedef MatElem<DistanceType> MatElemType;
-	
+	typedef MatElemSort<IndexType, DistanceType> MatElemSortType;
 	///////////////////////////////////////////
 	TEST_CLASS(UnitTestMatElem)
 	{
@@ -64,11 +65,20 @@ namespace CPPTestProject
 			//
 			//IndivsType oIndivs(&xMat,DataMode::modeCol);
 			IndivsType oIndivs(&xMat);
-			std::vector<size_t> index;
-			bool bRet = MatElemType::arrange(oIndivs, index);
-			Assert::IsTrue(bRet);
+			std::vector<DistanceType> distances;
+			oIndivs.compute_distances(distances);
+			const size_t n = oIndivs.indivs_count();
+			MatElemSortType oSort(n, &distances);
+			std::vector<size_t> index(n);
+			for (size_t i = 0; i < n; ++i) {
+				index[i] = i;
+			}
+			DistanceType crit1 = oSort.criteria(index);
+			oSort.arrange(index);
+			DistanceType crit2 = oSort.criteria(index);
 			std::wstringstream os;
 			////////////////////////////////////////
+			os << L"Start crit: " << crit1 << L"\t\tEnd crit: " << crit2 << std::endl;
 			for (auto jt = index.begin(); jt != index.end(); ++jt) {
 				if (jt != index.begin()) {
 					os << L", ";

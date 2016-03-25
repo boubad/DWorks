@@ -3,12 +3,11 @@
 #define  __MATEMEM_H__
 ///////////////////////////////
 #include <cassert>
+#include <memory>
 #include <vector>
 #include <deque>
 #include <set>
 #include <map>
-////////////////////////////////////
-#include "indivs.h"
 ////////////////////////////////////
 namespace info {
 	////////////////////////////////////////////
@@ -16,14 +15,17 @@ namespace info {
 	////////////////////////////////////////////
 	template <typename Z>
 	class ElemCrit {
+	public:
+		typedef Z DistanceType;
+		typedef ElemCrit<DistanceType> ElemCritType;
 	private:
 		size_t _first;
 		size_t _second;
 		MatElemOrderType _order;
-		Z _dist;
+		DistanceType _dist;
 	public:
 		ElemCrit() :_first(0), _second(0), _order(MatElemOrderType::orderInvalid), _dist(0) {}
-		ElemCrit(const size_t i1, const size_t i2, const MatElemOrderType o, const Z d) :
+		ElemCrit(const size_t i1, const size_t i2, const MatElemOrderType o, const DistanceType d) :
 			_first(i1), _second(i2), _order(o), _dist(d) {
 			if (this->_second < this->_first) {
 				this->_first = i2;
@@ -38,9 +40,9 @@ namespace info {
 				this->_second = i1;
 			}
 		}
-		ElemCrit(const ElemCrit<Z> &other) :_first(other._first), _second(other._second),
+		ElemCrit(const ElemCritType &other) :_first(other._first), _second(other._second),
 			_order(other._order), _dist(other._dist) {}
-		ElemCrit<Z> & operator=(const ElemCrit<Z> &other) {
+		ElemCritType & operator=(const ElemCritType &other) {
 			if (this != &other) {
 				this->_first = other._first;
 				this->_second = other._second;
@@ -68,14 +70,14 @@ namespace info {
 		void order(const MatElemOrderType o) {
 			this->_order = o;
 		}
-		Z criteria(void) const {
+		DistanceType criteria(void) const {
 			return (this->_dist);
 		}
-		void criteria(const Z d) {
+		void criteria(const DistanceType d) {
 			this->_dist = d;
 		}
 	public:
-		bool operator<(const ElemCrit<Z> &other) const {
+		bool operator<(const ElemCritType &other) const {
 			assert(this->is_valid());
 			assert(other.is_valid());
 			if (this->_first < other._first) {
@@ -86,7 +88,7 @@ namespace info {
 			}
 			return (this->_second < other._second);
 		}
-		bool operator==(const ElemCrit<Z> &other) const {
+		bool operator==(const ElemCritType &other) const {
 			assert(this->is_valid());
 			assert(other.is_valid());
 			return ((this->_first == other._first) && (this->_second == other._second));
@@ -95,16 +97,20 @@ namespace info {
 	///////////////////////////////////////////
 	template <typename Z> class ElemCrits {
 	public:
-		typedef ElemCrit<Z> ElemCritType;
+		typedef Z DistanceType;
+		//
+		typedef ElemCrit<DistanceType> ElemCritType;
 		typedef std::vector<ElemCritType> ElemCritTypeVector;
-		typedef ElemCrits<Z> ElemCritsType;
+		typedef ElemCrits<DistanceType> ElemCritsType;
 	private:
+		DistanceType _crit;
 		ElemCritTypeVector  _data;
 	public:
-		ElemCrits() {}
-		ElemCrits(const ElemCritsType &other) :_data(other._data) {}
+		ElemCrits() :_crit(0) {}
+		ElemCrits(const ElemCritsType &other) :_crit(other._crit), _data(other._data) {}
 		ElemCritsType & operator=(const ElemCritsType &other) {
 			if (this != &other) {
+				this->_crit = other._crit;
 				this->_data = other._data;
 			}
 			return (*this);
@@ -119,6 +125,7 @@ namespace info {
 		}
 	public:
 		void reset(void) {
+			this->_crit = 0;
 			this->_data.clear();
 		}// reset
 		size_t size(void) const {
@@ -128,19 +135,8 @@ namespace info {
 			assert(i < this->_data.size());
 			return (this->_data[i]);
 		}// at
-		Z criteria(void) const {
-			const ElemCritTypeVector &vv = this->_data;
-			Z dMin = 0;
-			for (auto it = vv.begin(); it != vv.end(); ++it) {
-				const Z d = (*it).citeria();
-				if (it == vv.begin()) {
-					dMin = d;
-				}
-				else if (d < dMin) {
-					dMin = d;
-				}
-			}// it
-			return (dMin);
+		DistanceType criteria(void) const {
+			return (this->_crit);
 		}// criteria
 		bool add(const ElemCritType &c) {
 			if (!c.is_valid()) {
@@ -148,46 +144,51 @@ namespace info {
 			}
 			ElemCritTypeVector &vv = this->_data;
 			if (vv.empty()) {
+				this->_crit = c.criteria();
 				ElemCritType cc(c);
 				vv.push_back(cc);
 				return (true);
 			}
-			const Z dCur = c.criteria();
-			Z dMin;
-			bool bFirst = true;
-			for (auto it = vv.begin(); it != vv.end(); ++it) {
-				const ElemCritType &x = *it;
-				const Z dd = x.criteria();
-				if (dCur > dd) {
-					return (false);
-				}
-				if (bFirst) {
-					bFirst = false;
-					dMin = dd;
-				}
-				else if (dd < dMin) {
-					dMin = dd;
-				}
-			}// it
-			if (dCur < dMin) {
+			const DistanceType curCrit = c.criteria();
+			const DistanceType bestCrit = this->criteria();
+			if (curCrit > bestCrit) {
+				return (false);
+			}
+			else if (curCrit < bestCrit) {
+				this->_crit = curCrit;
 				this->_data.clear();
 				ElemCritType cc(c);
 				this->_data.push_back(cc);
+				return (true);
 			}
+			const size_t i1 = c.first();
+			const size_t i2 = c.second();
+			auto iend = vv.end();
+			for (auto it = vv.begin(); it != iend; ++it) {
+				const ElemCritType &x = *it;
+				const size_t x1 = x.first();
+				const size_t x2 = x.second();
+				if ((i1 == x1) || (i1 == x2) || (i2 == x1) || (i2 == x2)) {
+					return (false);
+				}
+			}// it
+			ElemCritType cc(c);
+			this->_data.push_back(cc);
 			return (true);
 		}// add
 	};// class ElemCrits<Z>
 	////////////////////////////////////////
-	template <typename U = int> class MatElem {
+	template <typename U = size_t> class MatElem {
 	public:
 		typedef U IndexType;
+		//
 		typedef std::deque<IndexType> IndexTypeDeque;
 		typedef MatElem<IndexType> MatElemType;
 		typedef std::shared_ptr<MatElemType> MatElemTypePtr;
 		typedef std::vector<MatElemTypePtr> MatElemTypePtrVector;
 		//
-		typedef std::map<size_t, MatElemOrderType> MatOrderTypeMap;
-		typedef std::map<size_t, MatOrderTypeMap> SizeTMapType;
+		typedef std::map<IndexType, MatElemOrderType> MatOrderTypeMap;
+		typedef std::map<IndexType, MatOrderTypeMap> SizeTMapType;
 	private:
 		IndexTypeDeque _data;
 	public:
@@ -222,14 +223,17 @@ namespace info {
 			return (this->_data.back());
 		}
 		void add(const MatElemType &other, const MatElemOrderType order) {
-			assert(this->is_valid());
-			assert(other.is_valid());
+			assert(order != MatElemOrderType::orderInvalid);
+			if ((this->_data.empty()) || (other._data.empty())) {
+				return;
+			}
 			const IndexTypeDeque &xx = other._data;
 			IndexTypeDeque &vv = this->_data;
 			switch (order) {
 			case MatElemOrderType::orderFirstFirst:
 			{
-				for (auto it = xx.begin(); it != xx.end(); ++it) {
+				auto iend = xx.end();
+				for (auto it = xx.begin(); it != iend; ++it) {
 					vv.push_front(*it);
 				}// it
 			}
@@ -245,7 +249,8 @@ namespace info {
 			break;
 			case MatElemOrderType::orderLastFirst:
 			{
-				for (auto it = xx.begin(); it != xx.end(); ++it) {
+				auto iend = xx.end();
+				for (auto it = xx.begin(); it != iend; ++it) {
 					vv.push_back(*it);
 				}// it
 			}
@@ -263,127 +268,177 @@ namespace info {
 				break;
 			}// order
 		}// add
+	}; // class MatElem<U>
+	/////////////////////////////////////////
+	template <typename U = size_t, typename Z = long> class MatElemSort {
 	public:
-		template <typename T, typename UX, typename Z, class S>
-		static bool arrange(const Indivs<T, UX, Z, S> &oInds,
-			std::vector<size_t> &index) {
-			MatElemType oRes;
-			index.clear();
-			if (!arrange(oInds, oRes)) {
-				return (false);
-			}
-			const IndexTypeDeque & vv = oRes.data();
-			const size_t n = vv.size();
-			index.resize(n);
-			for (size_t i = 0; i < n; ++i) {
-				index[i] = vv[i];
-			}
-			return (true);
-		}// arrange
-		template <typename T, typename UX, typename Z, class S>
-		static bool arrange(const Indivs<T, UX, Z, S> &oInds,
-			MatElemType &oRes) {
-			size_t n = oInds.indivs_count();
-			MatElemTypePtrVector oVec(n);
+		typedef U IndexType;
+		typedef Z DistanceType;
+		//
+		typedef std::deque<IndexType> IndexTypeDeque;
+		typedef MatElem<IndexType> MatElemType;
+		typedef std::shared_ptr<MatElemType> MatElemTypePtr;
+		typedef std::vector<MatElemTypePtr> MatElemTypePtrVector;
+		typedef std::map<IndexType, MatElemOrderType> MatOrderTypeMap;
+		typedef std::map<IndexType, MatOrderTypeMap> SizeTMapType;
+		typedef MatElemSort<IndexType, DistanceType> MatElemSortType;
+		typedef std::vector<DistanceType> DistanceTypeVector;
+		typedef ElemCrit<DistanceType> ElemCritType;
+		typedef ElemCrits<DistanceType> ElemCritsType;
+	private:
+		size_t _n;
+		const DistanceTypeVector *_pdist;
+		MatElemTypePtrVector _vec;
+	public:
+		MatElemSort() :_n(0), _pdist(nullptr) {}
+		MatElemSort(const size_t n, const DistanceTypeVector *pdist) :_n(n), _pdist(pdist) {
+			assert(this->_n > 0);
+			assert(this->_pdist != nullptr);
+			assert(this->_pdist->size() >= (size_t)(this->_n * this->_n));
+			MatElemTypePtrVector &oVec = this->_vec;
 			oVec.resize(n);
 			for (size_t i = 0; i < n; ++i) {
 				oVec[i] = std::make_shared<MatElemType>((IndexType)i);
 			}// i
+		}
+		MatElemSort(const MatElemSortType &other) :_n(other._n), _pdist(other._pdist), _vec(other._vec) {}
+		MatElemSortType & operator=(const MatElemSortType &other) {
+			if (this != &other) {
+				this->_n = other._n;
+				this->_pdist = other._pdist;
+				this->_vec = other._vec;
+			}
+			return *this;
+		}
+		virtual ~MatElemSort() {}
+	public:
+		bool is_valid(void) const {
+			return ((this->_n > 0) && (this->_pdist != nullptr) &&
+				(this->_pdist->size() >= (size_t)(this->_n * this->_n)));
+		}
+	public:
+		template <typename X>
+		DistanceType criteria(const std::vector<X> &index) const {
+			assert(this->is_valid());
+			const size_t n = this->_n;
+			assert(index.size() == n);
+			double r = 0.0;
+			for (size_t i = 1; i < n; ++i) {
+				const size_t i1 = index[i - 1];
+				assert(i1 < n);
+				const size_t i2 = index[i];
+				assert(i2 < n);
+				r += this->indivs_distance(i1, i2);
+			}// i
+			return (DistanceType)(r / n);
+		}// criteria
+		template <typename X>
+		void arrange(std::vector<X> &index) {
+			if (!this->is_valid()) {
+				index.clear();
+				return;
+			}
+			const size_t n = this->_n;
+			MatElemTypePtrVector &oVec = this->_vec;
+			if (oVec.size() != n) {
+				oVec.resize(n);
+				for (size_t i = 0; i < n; ++i) {
+					oVec[i] = std::make_shared<MatElemType>((IndexType)i);
+				}// i
+			}
 			bool bDone = false;
 			while (!bDone) {
-				if (!update_candidates(oInds, oVec)) {
+				if (!update_candidates()) {
 					bDone = true;
 					break;
 				}
 			}// while
-			if (oVec.empty()) {
-				return (false);
-			}
+			assert(oVec.size() == 1);
 			MatElemType *p = (oVec[0]).get();
 			assert(p != nullptr);
-			oRes = *p;
-			return (true);
+			const IndexTypeDeque &src = p->data();
+			assert(src.size() == n);
+			index.resize(n);
+			for (size_t i = 0; i < n; ++i) {
+				index[i] = (X)src[i];
+			}// i
 		}// arrange
-		template <typename T, typename UX, typename Z, class S>
-		static bool update_candidates(const Indivs<T, UX, Z, S> &oInds,
-			MatElemTypePtrVector &oVec) {
-			typedef ElemCrit<Z> ElemCritType;
+	protected:
+		bool update_candidates(void) {
+			MatElemTypePtrVector &oVec = this->_vec;
 			const size_t n = oVec.size();
 			if (n < 2) {
 				return (false);
 			}
-			ElemCrits<Z> oCrits;
-			st_find_best_step(oVec, oInds, oCrits);
+			ElemCritsType oCrits;
+			this->find_best_step(oCrits);
 			const size_t nn = oCrits.size();
 			if (nn < 1) {
 				return (false);
 			}
-			const ElemCritType &c = oCrits.at(0);
-			const size_t i1 = c.first();
-			const size_t i2 = c.second();
-			const MatElemOrderType order = c.order();
+			std::set<size_t> oSet;
+			for (size_t i = 0; i < nn; ++i) {
+				const ElemCritType &c = oCrits.at(i);
+				const size_t i1 = c.first();
+				const size_t i2 = c.second();
+				const MatElemOrderType order = c.order();
+				MatElemTypePtr o = oVec[i1];
+				MatElemType *p = o.get();
+				assert(p != nullptr);
+				MatElemType *px = (oVec[i2]).get();
+				assert(px != nullptr);
+				p->add(*px, order);
+				oSet.insert(i2);
+			}// i
 			MatElemTypePtrVector xtemp;
-			MatElemTypePtr o = oVec[i1];
-			MatElemType *p = o.get();
-			assert(p != nullptr);
-			MatElemType *px = (oVec[i2]).get();
-			assert(px != nullptr);
-			p->add(*px, order);
 			for (size_t i = 0; i < n; ++i) {
-				if (i != i2) {
+				if (oSet.find(i) == oSet.end()) {
 					xtemp.push_back(oVec[i]);
 				}
-			}//
+			}//i
 			oVec = xtemp;
 			return (true);
 		}//update_candidates
-		template <typename T, typename UX, typename Z, class S>
-		static void  st_find_best_step(const  MatElemTypePtrVector &oVec,
-			const Indivs<T, UX, Z, S> &oInds,
-			ElemCrits<Z> &oCrits) {
-			typedef ElemCrit<Z> ElemCritType;
+		void  find_best_step(ElemCritsType  &oCrits) const {
 			oCrits.reset();
-			const size_t n = oVec.size();
+			const size_t n = this->_vec.size();
 			for (size_t i = 0; i < n; ++i) {
-				const MatElemTypePtr &oFirst = oVec[i];
-				const MatElemType *p1 = oFirst.get();
-				assert(p1 != nullptr);
 				for (size_t j = i + 1; j < n; ++j) {
-					const MatElemTypePtr &oSecond = oVec[j];
-					const MatElemType *p2 = oSecond.get();
-					assert(p2 != nullptr);
 					ElemCritType c(i, j);
-					p1->distance(*p2, oInds, c);
+					this->distance(i, j, c);
 					oCrits.add(c);
 				}// j
 			}// i
 		}// st_find_best_step
-		template <typename T, typename UX, typename Z, class S>
-		Z distance(const MatElemType &other, const Indivs<T, UX, Z, S> &oInds, ElemCrit<Z> &oCrit) const {
-			typedef ElemCrit<Z> ElemCritType;
+		DistanceType distance(const size_t ipos, const size_t jpos, ElemCritType &oCrit) const {
+			const MatElemTypePtrVector &oVec = this->_vec;
+			const size_t n = oVec.size();
+			assert(ipos < n);
+			assert(jpos < n);
+			assert(ipos != jpos);
 			//
-			assert(oInds.is_valid());
-			assert(this->is_valid());
-			assert(other.is_valid());
+			const MatElemType *p1 = (oVec[ipos]).get();
+			assert(p1 != nullptr);
+			const MatElemType *p2 = (oVec[jpos]).get();
+			assert(p2 != nullptr);
 			//
+			DistanceType d = 0;
 			MatElemOrderType order = MatElemOrderType::orderInvalid;
-			const size_t i1 = this->front();
-			const size_t j1 = other.front();
+			const size_t i1 = p1->front();
+			const size_t j1 = p2->front();
 			assert(i1 != j1);
-			if (this->size() == 1) {
-				if (other.size() == 1) {
+			const DistanceType d1 = this->indivs_distance(i1, j1);
+			if (p1->size() == 1) {
+				if (p2->size() == 1) {
 					order = MatElemOrderType::orderFirstFirst;
-					const Z d = oInds.distance_index(i1, j1);
 					oCrit.order(order);
-					oCrit.criteria(d);
-					return (d);
+					oCrit.criteria(d1);
+					return (d1);
 				}
 				else {
-					const size_t j2 = other.back();
+					const size_t j2 = p2->back();
 					assert(j2 != i1);
-					assert(j2 < oInds.indivs_count());
-					const Z d1 = oInds.distance_index(i1, j1);
-					const Z d2 = oInds.distance_index(i1, j2);
+					const Z d2 = this->indivs_distance(i1, j2);
 					if (d1 < d2) {
 						order = MatElemOrderType::orderFirstFirst;
 						oCrit.order(order);
@@ -399,13 +454,10 @@ namespace info {
 				}
 			}
 			else {
-				const size_t i2 = this->back();
+				const size_t i2 = p1->back();
 				assert(i1 != i2);
-				assert(i1 < oInds.indivs_count());
-				assert(i2 < oInds.indivs_count());
-				if (other.size() == 1) {
-					const Z d1 = oInds.distance_index(i1, j1);
-					const Z d2 = oInds.distance_index(i2, j1);
+				if (p2->size() == 1) {
+					const Z d2 = this->indivs_distance(i2, j1);
 					if (d1 < d2) {
 						order = MatElemOrderType::orderFirstFirst;
 						oCrit.order(order);
@@ -420,36 +472,43 @@ namespace info {
 					}
 				}
 				else {
-					const size_t j2 = other.back();
+					const size_t j2 = p2->back();
 					assert(j1 != j2);
 					assert(i1 != j2);
 					assert(i2 != j2);
 					order = MatElemOrderType::orderFirstFirst;
-					const Z d1 = oInds.distance_index(i1, j1);
-					Z dRet = d1;
-					const Z d2 = oInds.distance_index(i1, j2);
+					d = d1;
+					const Z d2 = this->indivs_distance(i1, j2);
 					if (d2 < d1) {
-						dRet = d2;
-					    order = MatElemOrderType::orderFirstLast;
+						d = d2;
+						order = MatElemOrderType::orderFirstLast;
 					}
-					const Z d3 = oInds.distance_index(i2, j1);
-					if (d3 < dRet) {
-						dRet = d3;
+					const Z d3 = this->indivs_distance(i2, j1);
+					if (d3 < d) {
+						d = d3;
 						order = MatElemOrderType::orderLastFirst;
 					}
-					const Z d4 = oInds.distance_index(i2, j2);
-					if (d4 < dRet) {
-						dRet = d4;
+					const Z d4 = this->indivs_distance(i2, j2);
+					if (d4 < d) {
+						d = d4;
 						order = MatElemOrderType::orderLastLast;
 					}
 					oCrit.order(order);
-					oCrit.criteria(dRet);
-					return dRet;
+					oCrit.criteria(d);
+					return d;
 				}
 			}
 		}// distance
-	}; // class MatElem
-	/////////////////////////////////////////
+		DistanceType indivs_distance(const size_t i1, const size_t i2) const {
+			assert(this->is_valid());
+			assert(i1 < this->_n);
+			assert(i2 < this->_n);
+			const DistanceTypeVector &d = *(this->_pdist);
+			return (d[i1 * this->_n + i2]);
+		}// distance
+	 /////////
+	}; // class MatElemSort<U,Z>
+	/////////////////////////////////////////////
 }// namespace info
 ///////////////////////////////////
 #endif // !__MATEMEM_H__
