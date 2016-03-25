@@ -68,44 +68,34 @@ namespace info {
 			return (this->value_at(irow, icol));
 		}
 	public:
-		bool is_valid(void) const {
+		virtual bool is_valid(void) const {
 			return ((this->rows() > 0) && (this->cols() > 0) && (this->_pdata != nullptr) &&
 				(this->_pdata->size() >= (size_t)(this->cols() * this->rows())) &&
 				(this->_rowids.size() == this->_rows) && (this->_colids.size() == this->_cols));
 		}
-		size_t rows(void) const {
+		virtual size_t rows(void) const {
 			return (this->_rows);
 		}
-		size_t cols(void) const {
+		virtual size_t cols(void) const {
 			return (this->_cols);
 		}
 	public:
 		virtual const StringType &row_name(const size_t i) const {
-			assert(i < this->_rows);
-			assert((this->_rowids.size() == this->_rows));
 			return ((this->_rowids)[i]);
 		}
 		virtual const StringType &col_name(const size_t i) const {
-			assert(i < this->_cols);
-			assert((this->_colids.size() == this->_cols));
 			return ((this->_colids)[i]);
 		}
 		virtual DataType value_at(const size_t irow, const size_t icol) const {
-			assert(this->is_valid());
-			assert(irow < this->_rows);
-			assert(icol < this->_cols);
-			return ((*(this->_pdata))[irow * this->_cols + icol]);
+			return ((*(this->_pdata))[irow * this->cols() + icol]);
 		}
 		virtual void row_at(const size_t irow, DataTypeArray &v) const {
-			assert(this->is_valid());
-			assert(irow < this->_rows);
-			v = (*(this->_pdata))[std::slice(irow * this->_cols, this->_cols, 1)];
+			v = (*(this->_pdata))[std::slice(irow * this->cols(), this->cols(), 1)];
 		}// row_at
 		virtual void col_at(const size_t icol, DataTypeArray &v) const {
-			assert(this->is_valid());
-			assert(icol < this->_cols);
-			v = (*(this->_pdata))[std::slice(icol, this->_rows, this->_cols)];
+			v = (*(this->_pdata))[std::slice(icol, this->rows(), this->cols())];
 		}// row_at
+	public:
 		void get_rows_min_max(DataTypeArray &vmin, DataTypeArray &vmax) const {
 			const size_t n = this->cols();
 			vmin.resize(n);
@@ -131,11 +121,11 @@ namespace info {
 		bool discretize_data(std::valarray<int> &vRet, const size_t nc = 7) const {
 			assert(nc > 2);
 			assert(this->is_valid());
-			const size_t nRows = this->_rows;
+			const size_t nRows = this->rows();
 			if (nRows < nc) {
 				return (false);
 			}
-			const size_t nCols = this->_cols;
+			const size_t nCols = this->cols();
 			const size_t nTotal = (size_t)(nCols * nRows);
 			vRet.resize(nTotal);
 			size_t nClasses = nc;
@@ -158,11 +148,11 @@ namespace info {
 		template <typename X>
 		bool normalize_data(std::valarray<X> &vRet) const {
 			assert(this->is_valid());
-			const size_t nRows = this->_rows;
+			const size_t nRows = this->rows();
 			if (nRows < 3) {
 				return (false);
 			}
-			const size_t nCols = this->_cols;
+			const size_t nCols = this->cols();
 			const size_t nTotal = (size_t)(nCols * nRows);
 			vRet.resize(nTotal);
 			for (size_t icol = 0; icol < nCols; ++icol) {
@@ -192,11 +182,11 @@ namespace info {
 		bool recode_data(std::valarray<X> &vRet, const X xMax = (X)255, const X xMin = (X)0) const {
 			assert(xMin < xMax);
 			assert(this->is_valid());
-			const size_t nRows = this->_rows;
+			const size_t nRows = this->rows();
 			if (nRows < 3) {
 				return (false);
 			}
-			const size_t nCols = this->_cols;
+			const size_t nCols = this->cols();
 			const size_t nTotal = (size_t)(nCols * nRows);
 			vRet.resize(nTotal);
 			for (size_t icol = 0; icol < nCols; ++icol) {
@@ -315,36 +305,79 @@ namespace info {
 		typedef std::vector<IndexType> IndexTypeVector;
 		typedef IndexedMatData<DataType, IndexType, StringType> IndexedMatDataType;
 	private:
+		const MatDataType *_pmat;
 		IndexTypeVector _rowindex;
 		IndexTypeVector _colindex;
 	public:
-		IndexedMatData() {}
-		IndexedMatData(const size_t r, const size_t c, const DataTypeArray *pData,
-			const StringTypeVector *pRowNames = nullptr,
-			const StringTypeVector *pColNames = nullptr) :MataDataType(r, c, pData, pRowNames, pColNames),
-			_rowindex(r), _colindex(c) {
+		IndexedMatData() :_pmat(nullptr) {}
+		IndexedMatData(const MatDataType *pMat) :_pmat(pMat) {
+			assert(this->_pmat != nullptr);
+			assert(this->_pmat->is_valid());
+			const size_t c = this->_pmat->cols();
+			const size_t r = this->_pmat->rows();
 			IndexTypeVector &vr = this->_rowindex;
-			assert(vr.size() == r);
+			vr.resize(r);
 			for (size_t i = 0; i < r; ++i) {
 				vr[i] = (U)i;
 			}
 			IndexTypeVector &vc = this->_colindex;
-			assert(vc.size() == c);
+			vc.resize(c);
 			for (size_t i = 0; i < c; ++i) {
 				vc[i] = (U)i;
 			}
 		}
-		IndexedMatData(const IndexedMatDataType &other) :MatDataType(other),
+		IndexedMatData(const IndexedMatDataType &other) :MatDataType(other), _pmat(other._pmat),
 			_rowindex(other._rowindex), _colindex(other._colindex) {}
 		IndexedMatDataType & operator=(const IndexedMatDataType &other) {
 			if (this != &other) {
 				MatDataType::operator=(other);
+				this->_pmat = other._pmat;
 				this->_rowindex = other._rowindex;
 				this->_colindex = other._colindex;
 			}
 			return (*this);
 		}
 		virtual ~IndexedMatData() {}
+	public:
+		virtual bool is_valid(void) const {
+			return ((this->_pmat != nullptr) && (this->_pmat->is_valid()) &&
+				(this->_rowindex.size() == this->_pmat->rows()) &&
+				(this->_colindex.size() == this->_pmat->cols()));
+		}// is_valid
+		virtual size_t rows(void) const {
+			assert(this->_pmat != nullptr);
+			return (this->_pmat->rows());
+		}
+		virtual size_t cols(void) const {
+			assert(this->_pmat != nullptr);
+			return (this->_pmat->cols());
+		}
+		virtual const StringType &row_name(const size_t i) const {
+			assert(this->is_valid());
+			assert(i < this->_rowindex.size());
+			return this->_pmat->row_name(this->_rowindex[i]);
+		}
+		virtual const StringType &col_name(const size_t i) const {
+			assert(this->is_valid());
+			assert(i < this->_colindex.size());
+			return this->_pmat->col_name(this->_colindex[i]);
+		}
+		virtual DataType value_at(const size_t irow, const size_t icol) const {
+			assert(this->is_valid());
+			assert(irow < this->_rowindex.size());
+			assert(icol < this->_colindex.size());
+			return this->_pmat->value_at(this->_rowindex[irow], this->_colindex[icol]);
+		}
+		virtual void row_at(const size_t irow, DataTypeArray &v) const {
+			assert(this->is_valid());
+			assert(irow < this->_rowindex.size());
+			return this->_pmat->row_at(this->_rowindex[irow], v);
+		}// row_at
+		virtual void col_at(const size_t icol, DataTypeArray &v) const {
+			assert(this->is_valid());
+			assert(icol < this->_colindex.size());
+			return this->_pmat->col_at(this->_colindex[icol], v);
+		}// row_at
 	public:
 		void shuffle_rows(void) {
 			shuffle_vector(this->_rowindex);
@@ -415,49 +448,6 @@ namespace info {
 			}
 		}
 	public:
-		virtual const StringType &row_name(const size_t i) const {
-			assert(irow < this->_rowindex.size());
-			return ((MatDataType::this->row_name)[i]);
-		}
-		virtual const StringType &col_name(const size_t i) const {
-			assert(icol < this->_colindex.size());
-			return ((MatDataType::this->col_name)[i]);;
-		}
-		virtual DataType value_at(const size_t irow, const size_t icol) const {
-			assert(irow < this->_rowindex.size());
-			assert(icol < this->_colindex.size());
-			return (MatDataType::value_at(this->_rowindex[irow], this->_colindex[icol]));
-		}
-		virtual void row_at(const size_t irow, DataTypeArray &v) const {
-			assert(irow < this->_rowindex.size());
-			return (MatDataType::row_at(this->_rowindex[irow], v));
-		}// row_at
-		virtual void col_at(const size_t icol, DataTypeArray &v) const {
-			assert(icol < this->_colindex.size());
-			return (MatDataType::col_at(this->_colindex[icol], v));
-		}// row_at
-	public:
-		virtual std::ostream & write_to(std::ostream &os) const {
-			os << "row indexes: [";
-			auto vv = this->rowindex();
-			for (auto it = vv.begin(); it != vv.end(); ++it) {
-				if (it != vv.begin()) {
-					os << ", ";
-				}
-				os << (*it);
-			}
-			os << " ]" << std::endl;
-			os << "col indexes: [";
-			auto vx = this->colindex();
-			for (auto it = vr.begin(); it != rv.end(); ++it) {
-				if (it != vr.begin()) {
-					os << ", ";
-				}
-				os << (*it);
-			}
-			os << " ]" << std::endl;
-			return MatDataType::write_to(os);
-		}// write_to
 		virtual std::wostream & write_to(std::wostream &os) const {
 			os << L"row indexes: [";
 			auto vv = this->rowindex();
@@ -470,8 +460,8 @@ namespace info {
 			os << L" ]" << std::endl;
 			os << L"col indexes: [";
 			auto vx = this->colindex();
-			for (auto it = vr.begin(); it != rv.end(); ++it) {
-				if (it != vr.begin()) {
+			for (auto it = vx.begin(); it != vx.end(); ++it) {
+				if (it != vx.begin()) {
 					os << L", ";
 				}
 				os << (*it);

@@ -33,6 +33,7 @@ namespace CPPTestProject
 	typedef Indivs<DataType, IndexType, DistanceType, StringType> IndivsType;
 	typedef MatElem<DistanceType> MatElemType;
 	typedef MatElemSort<IndexType, DistanceType> MatElemSortType;
+	typedef IndexedMatData<DataType, IndexType, StringType> IndexedMatDataType;
 	///////////////////////////////////////////
 	TEST_CLASS(UnitTestMatElem)
 	{
@@ -64,33 +65,78 @@ namespace CPPTestProject
 			MatDataType xMat(nRows, nCols, &oTransfData, &rowNames, &colNames);
 			//
 			//IndivsType oIndivs(&xMat,DataMode::modeCol);
-			IndivsType oIndivs(&xMat);
-			std::vector<DistanceType> distances;
-			oIndivs.compute_distances(distances);
-			const size_t n = oIndivs.indivs_count();
-			MatElemSortType oSort(n, &distances);
-			std::vector<size_t> index(n);
-			for (size_t i = 0; i < n; ++i) {
-				index[i] = i;
-			}
-			DistanceType crit1 = oSort.criteria(index);
-			oSort.arrange(index);
-			DistanceType crit2 = oSort.criteria(index);
-			std::wstringstream os;
-			////////////////////////////////////////
-			os << L"Start crit: " << crit1 << L"\t\tEnd crit: " << crit2 << std::endl;
-			for (auto jt = index.begin(); jt != index.end(); ++jt) {
-				if (jt != index.begin()) {
-					os << L", ";
+			std::vector<IndexType> rowindex, colindex;
+			{
+				IndivsType oIndivs(&xMat);
+				std::vector<DistanceType> distances;
+				oIndivs.compute_distances(distances);
+				const size_t n = oIndivs.indivs_count();
+				MatElemSortType oSort(n, &distances);
+				std::vector<IndexType> index(n);
+				for (size_t i = 0; i < n; ++i) {
+					index[i] = i;
 				}
-				IndexType id = *jt;
-				const IndivType *p = oIndivs.indiv(id);
-				Assert::IsNotNull(p);
-				os << p->id();
-			}// jt
-			 /////////////////////
-			std::wstring sd = os.str();
-			Logger::WriteMessage(sd.c_str());
+				DistanceType crit1 = oSort.criteria(index);
+				oSort.arrange(index);
+				rowindex = index;
+				DistanceType crit2 = oSort.criteria(index);
+				std::wstringstream os;
+				////////////////////////////////////////
+				os << L"Start crit: " << crit1 << L"\t\tEnd crit: " << crit2 << std::endl;
+				for (auto jt = index.begin(); jt != index.end(); ++jt) {
+					if (jt != index.begin()) {
+						os << L", ";
+					}
+					IndexType id = *jt;
+					const IndivType *p = oIndivs.indiv(id);
+					Assert::IsNotNull(p);
+					os << p->id();
+				}// jt
+				 /////////////////////
+				std::wstring sd = os.str();
+				Logger::WriteMessage(sd.c_str());
+			}
+			{
+				IndivsType oIndivs(&xMat, DataMode::modeCol);
+				std::vector<DistanceType> distances;
+				oIndivs.compute_distances(distances);
+				const size_t n = oIndivs.indivs_count();
+				MatElemSortType oSort(n, &distances);
+				std::vector<IndexType> index(n);
+				for (size_t i = 0; i < n; ++i) {
+					index[i] = i;
+				}
+				DistanceType crit1 = oSort.criteria(index);
+				oSort.arrange(index);
+				colindex = index;
+				DistanceType crit2 = oSort.criteria(index);
+				std::wstringstream os;
+				////////////////////////////////////////
+				os << L"Start crit: " << crit1 << L"\t\tEnd crit: " << crit2 << std::endl;
+				for (auto jt = index.begin(); jt != index.end(); ++jt) {
+					if (jt != index.begin()) {
+						os << L", ";
+					}
+					IndexType id = *jt;
+					const IndivType *p = oIndivs.indiv(id);
+					Assert::IsNotNull(p);
+					os << p->id();
+				}// jt
+				 /////////////////////
+				std::wstring sd = os.str();
+				Logger::WriteMessage(sd.c_str());
+			}
+			////////////////////////////////////
+			IndexedMatDataType rMat(&xMat);
+			rMat.colindex(colindex);
+			rMat.rowindex(rowindex);
+			{
+				std::wstringstream os;
+				os << std::endl << std::endl;
+				os << rMat;
+				std::wstring sd = os.str();
+				Logger::WriteMessage(sd.c_str());
+			}
 			////////////////////////////////
 		}// estClusterizeIndivsDouble
 	};
