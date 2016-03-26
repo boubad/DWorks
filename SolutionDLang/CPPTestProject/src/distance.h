@@ -18,7 +18,6 @@ namespace info {
 		Z operator()(const std::valarray<T> &v1, const std::valarray<T> &v2) const {
 			return this->perform_compute(v1, v2);
 		}// operator()
-	protected:
 		virtual Z perform_compute(const std::valarray<T> & v1, const std::valarray<T> & v2) const {
 			const size_t n = v1.size();
 			assert(v2.size() == n);
@@ -39,9 +38,9 @@ namespace info {
 		const DistanceFunc<T, Z> &_func;
 		const std::valarray<W> &_weights;
 	public:
-		WeightedDistanceFunc(const DistanceFunc<T, Z> &func, const std::valarray<W> &ww) : DistanceFunc<T, Z>(other),
+		WeightedDistanceFunc(const DistanceFunc<T, Z> &func, const std::valarray<W> &ww) :
 			_func(func), _weights(ww) {}
-		WeightedDistanceFunc(const WeightedDistanceFunc<T, Z, W> &other) :_func(other._func), _weights(other._weights) {}
+		WeightedDistanceFunc(const WeightedDistanceFunc<T, Z, W> &other) : DistanceFunc<T, Z>(other), _func(other._func), _weights(other._weights) {}
 		WeightedDistanceFunc<T, Z, W> & operator=(const WeightedDistanceFunc<T, Z, W> &other) {
 			if (this != &other) {
 				DistanceFunc<T, Z>::operator=(other);
@@ -51,7 +50,6 @@ namespace info {
 			return (*this);
 		}
 		virtual ~WeightedDistanceFunc() {}
-	protected:
 		virtual Z perform_compute(const std::valarray<T> &v1, const std::valarray<T> &v2) const {
 			const size_t n = v1.size();
 			assert(v2.size() == n);
@@ -61,7 +59,7 @@ namespace info {
 			for (size_t i = 0; i < n; ++i) {
 				const W w = ww[i];
 				assert(w >= 0);
-				res += = (Z)(w * this->_func.compute_one_step(v1[i], v2[i], pos));
+				res +=  (Z)(w * this->_func.compute_one_step(v1[i], v2[i], i));
 			}// i
 			return res;
 		}// perform_compute
@@ -85,7 +83,6 @@ namespace info {
 			return (*this);
 		}
 		virtual ~ManhattanDistanceFunc() {}
-	protected:
 		virtual Z perform_compute(const std::valarray<T> &v1, const std::valarray<T> &v2) const {
 			const size_t n = v1.size();
 			assert(v2.size() == n);
@@ -110,7 +107,6 @@ namespace info {
 			return (*this);
 		}
 		virtual ~EuclideDistanceFunc() {}
-	protected:
 		virtual Z perform_compute(const std::valarray<T> &v1, const std::valarray<T> &v2) const {
 			const size_t n = v1.size();
 			assert(v2.size() == n);

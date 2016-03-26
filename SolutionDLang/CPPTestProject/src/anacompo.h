@@ -193,7 +193,7 @@ namespace info {
 					oTemp[k] = x;
 					s += x * x;
 				} // i
-				double dvar = s / dnr1;
+				double dvar = s / dnr;
 				if (dvar > 0.0) {
 					double ec1 = std::sqrt(dvar);
 					xStds[ivar] = ec1;
@@ -202,10 +202,10 @@ namespace info {
 						double s = 0.0;
 						for (size_t i = 0; i < nr; ++i) {
 							double x = oTemp[i * nv + ivar1]
-								* oTemp[i * nv + ivar1];
+								* oTemp[i * nv + ivar];
 							s += x;
 						}
-						s /= dnr1;
+						s /= dnr;
 						double r = s / (ec1 * xStds[ivar1]);
 						T rt = (T)r;
 						xCorr[ivar * nv + ivar1] = r;
@@ -228,7 +228,6 @@ namespace info {
 					}
 				}
 			}
-
 			nFacts = 0;
 			std::vector<double> xVals, xVecs;
 			double stotal = 0.0;
@@ -322,7 +321,7 @@ namespace info {
 					oTemp[k] = x;
 					s += x * x;
 				} // i
-				double dvar = s / dnr1;
+				double dvar = s / dnr;
 				if (dvar > 0.0) {
 					double ec1 = std::sqrt(dvar);
 					xStds[ivar] = ec1;
@@ -331,10 +330,10 @@ namespace info {
 						double s = 0.0;
 						for (size_t i = 0; i < nr; ++i) {
 							double x = oTemp[i * nv + ivar1]
-								* oTemp[i * nv + ivar1];
+								* oTemp[i * nv + ivar];
 							s += x;
 						}
-						s /= dnr1;
+						s /= dnr;
 						double r = s / (ec1 * xStds[ivar1]);
 						T rt = (T)r;
 						xCorr[ivar * nv + ivar1] = r;
@@ -423,9 +422,24 @@ namespace info {
 			return (compute_anacompo(nr, nv, oSrc, oMeans,
 				oStds, oCorr, nFacts, oFreq, oVals, oVecs, oVars, oInds));
 		}
+		template<typename X>
+		static bool compute_anacompo(const size_t nr, const size_t nv,
+			const std::valarray<X> &oSrc, size_t &nFacts, std::valarray<T> &oFreq,
+			std::valarray<T> &oVars, std::valarray<T> &oInds) {
+			std::valarray<T> oMeans, oStds, oCorr, oVals, oVecs;
+			return (compute_anacompo(nr, nv, oSrc, oMeans,
+				oStds, oCorr, nFacts, oFreq, oVals, oVecs, oVars, oInds));
+		}
+		template<typename X, class ALLOCX, class ALLOCT>
+		static bool compute_anacompo(const size_t nr, const size_t nv,
+			const std::vector<X, ALLOCX> &oSrc, size_t &nFacts, std::vector<T, ALLOCT> &oFreq,
+			std::vector<T, ALLOCT> &oVars, std::vector<T, ALLOCT> &oInds) {
+			std::vector<T, ALLOCT> oMeans, oStds, oCorr, oVals, oVecs;
+			return (compute_anacompo(nr, nv, oSrc, oMeans,
+				oStds, oCorr, nFacts, oFreq, oVals, oVecs, oVars, oInds));
+		}
 	};
 	// class IntraEigenSolver<T>
 }
-////////////////////////////////////////
 ///////////////////////////////////////
 #endif // __ANACOMPO_H__

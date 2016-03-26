@@ -43,6 +43,7 @@ namespace CPPTestProject
 		//
 		TEST_METHOD(TestAnaCompoMat)
 		{
+			EuclideDistanceFunc<DataType, DistanceType> oBaseDist;
 			StringTypeVector rowNames;
 			StringTypeVector colNames;
 			size_t nCols = 0;
@@ -57,13 +58,16 @@ namespace CPPTestProject
 			Assert::AreEqual(nTotal, data.size());
 			//
 			size_t nFacts = 0;
-			std::valarray<double> oVars, oInds;
-			bool bRet = IntraEigenSolverType::compute_anacompo(nRows, nCols, data, nFacts, oVars, oInds);
+			std::valarray<double> oVars, oInds, oFreq;
+			bool bRet = IntraEigenSolverType::compute_anacompo(nRows, nCols, data, nFacts, oFreq, oVars, oInds);
 			Assert::IsTrue(bRet);
 			Assert::IsTrue(nFacts > 0);
 			Assert::IsTrue(nFacts <= nCols);
+			Assert::IsTrue(oFreq.size() >= nFacts);
 			Assert::IsTrue(oVars.size() >= (size_t)(nCols * nFacts));
 			Assert::IsTrue(oInds.size() >= (size_t)(nRows * nFacts));
+			//
+			WeightedDistanceFunc<DataType, DistanceType, double> fDist(oBaseDist, oFreq);
 			//
 			std::vector<IndexType> rowindex, colindex;
 			//
@@ -73,7 +77,7 @@ namespace CPPTestProject
 				bool b = oMat.recode_data(oTransfData, maxVal, minVal);
 				Assert::IsTrue(b);
 				MatDataType xMat(nRows, nFacts, &oTransfData);
-				IndivsType oIndivs(&xMat);
+				IndivsType oIndivs(&xMat, DataMode::modeRow, &fDist);
 				std::vector<DistanceType> distances;
 				oIndivs.compute_distances(distances);
 				const size_t n = oIndivs.indivs_count();
@@ -109,7 +113,7 @@ namespace CPPTestProject
 				bool b = oMat.recode_data(oTransfData, maxVal, minVal);
 				Assert::IsTrue(b);
 				MatDataType xMat(nCols, nFacts, &oTransfData);
-				IndivsType oIndivs(&xMat);
+				IndivsType oIndivs(&xMat, DataMode::modeRow, &fDist);
 				std::vector<DistanceType> distances;
 				oIndivs.compute_distances(distances);
 				const size_t n = oIndivs.indivs_count();
