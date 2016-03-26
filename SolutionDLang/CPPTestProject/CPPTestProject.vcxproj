@@ -75,19 +75,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>./src;$(IncludePath)</IncludePath>
+    <IncludePath>./src;D:\VS2015\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>./src;$(IncludePath)</IncludePath>
+    <IncludePath>./src;D:\VS2015\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>./src;$(IncludePath)</IncludePath>
+    <IncludePath>./src;D:\VS2015\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>./src;$(IncludePath)</IncludePath>
+    <IncludePath>./src;D:\VS2015\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -159,11 +159,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="infotestdata.h" />
+    <ClInclude Include="src\anacompo.h" />
     <ClInclude Include="src\arrangedesc.h" />
     <ClInclude Include="src\cluster.h" />
     <ClInclude Include="src\clusterize.h" />
     <ClInclude Include="src\clusterizeindivs.h" />
     <ClInclude Include="src\distance.h" />
+    <ClInclude Include="src\eigen.h" />
     <ClInclude Include="src\indiv.h" />
     <ClInclude Include="src\indivs.h" />
     <ClInclude Include="src\indivset.h" />
@@ -177,11 +179,18 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AnaCompoTest.cpp" />
     <ClCompile Include="ArrangeTest.cpp" />
     <ClCompile Include="ClusterizeTest.cpp" />
     <ClCompile Include="infotestdata.cpp" />
     <ClCompile Include="MatDatatTest.cpp" />
     <ClCompile Include="MatElemTest.cpp" />
+    <ClCompile Include="src\eigen.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

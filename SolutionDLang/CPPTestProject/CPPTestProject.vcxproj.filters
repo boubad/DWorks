@@ -69,6 +69,12 @@
     <ClInclude Include="src\matelem.h">
       <Filter>Header Files\src</Filter>
     </ClInclude>
+    <ClInclude Include="src\eigen.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\anacompo.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -93,6 +99,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MatElemTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\eigen.cpp">
+      <Filter>Header Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="AnaCompoTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

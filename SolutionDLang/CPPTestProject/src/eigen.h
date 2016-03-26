@@ -1,0 +1,14 @@
+#pragma once
+#ifndef __EIGEN_H__
+#define __EIGEN_H__
+//////////////////////////////////
+namespace info {
+	//////////////////////////////////////////////
+	extern bool compute_eigen_impl(const size_t n, const double *pData,
+		double *pVals, double *pVecs, size_t *pNbFacts = nullptr);
+	//////////////////////////////////////////////
+}// namespace statdata
+//////////////////////////////////
+#endif // !__EIGEN_H__
+////////////////////////
+//eof: eigen.h

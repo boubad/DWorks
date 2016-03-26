@@ -317,6 +317,7 @@ namespace info {
 				(this->_pdist->size() >= (size_t)(this->_n * this->_n)));
 		}
 	public:
+		
 		template <typename X>
 		DistanceType criteria(const std::vector<X> &index) const {
 			assert(this->is_valid());
@@ -332,6 +333,30 @@ namespace info {
 			}// i
 			return (DistanceType)(r / n);
 		}// criteria
+		template <typename X>
+		DistanceType criteria(const std::valarray<X> &index) const {
+			assert(this->is_valid());
+			const size_t n = this->_n;
+			assert(index.size() == n);
+			double r = 0.0;
+			for (size_t i = 1; i < n; ++i) {
+				const size_t i1 = index[i - 1];
+				assert(i1 < n);
+				const size_t i2 = index[i];
+				assert(i2 < n);
+				r += this->indivs_distance(i1, i2);
+			}// i
+			return (DistanceType)(r / n);
+		}// criteria
+		template <typename X>
+		void arrange(std::valarray<X> &index) {
+			std::vector<X> temp;
+			this->arrange(temp);
+			const size_t n = temp.size();
+			for (size_t i = 0; i < n; ++i) {
+				index[i] = temp[i];
+			}
+		}// arrange
 		template <typename X>
 		void arrange(std::vector<X> &index) {
 			if (!this->is_valid()) {
@@ -362,8 +387,80 @@ namespace info {
 			for (size_t i = 0; i < n; ++i) {
 				index[i] = (X)src[i];
 			}// i
+			this->check_permutations(index);
 		}// arrange
 	protected:
+		template <typename X>
+		void check_permutations(std::vector<X> &index) const {
+			const size_t n = (size_t)(index.size() / 2);
+			if (n < 1) {
+				return;
+			}
+			for (size_t i = 1; i <= n; ++i) {
+				this->permute_one_step(index, i);
+			}// i
+		}//check_permutations
+		template <typename X>
+		void permute_one_step(std::vector<X> &index, const size_t iLength = 1) const {
+			assert(iLength > 0);
+			const size_t n = index.size();
+			DistanceType bestCrit = this->criteria(index);
+			std::vector<X> bestIndex(index);
+			bool bDone = false;
+			while (!bDone) {
+				bDone = true;
+				for (size_t i = 0; i < n; ++i) {
+					if ((size_t)(i + iLength) > n) {
+						break;
+					}
+					for (size_t j = i + iLength; j < n; ++j) {
+						if ((size_t)(j + iLength) > n) {
+							break;
+						}
+						std::vector<X> curIndex(index);
+						if (!this->permute_indexes(curIndex, i, j, iLength)) {
+							break;
+						}
+						const DistanceType dCur = this->criteria(curIndex);
+						if (dCur < bestCrit) {
+							bDone = false;
+							bestCrit = dCur;
+							bestIndex = curIndex;
+						}// ok
+					}// j
+				}// i
+			}// not done
+			index = bestIndex;
+		}//permute_one_step
+		template <typename X>
+		bool permute_indexes(std::vector<X> &index, const size_t iSrc, const size_t iDest, const size_t iLength = 1) const {
+			const size_t n = index.size();
+			assert(iSrc < n);
+			assert(iDest < n);
+			assert(iLength > 0);
+			size_t i1 = iSrc;
+			size_t i2 = iDest;
+			if (i1 > i2) {
+				size_t t = i1;
+				i1 = i2;
+				i2 = t;
+			}
+			else if (i1 == i2) {
+				return (false);
+			}
+			if ((size_t)(i1 + iLength) > i2) {
+				return (false);
+			}
+			if ((size_t)(i2 + iLength) > n) {
+				return (false);
+			}
+			for (size_t i = 0; i < iLength; ++i) {
+				X temp = index[i1 + i];
+				index[i1 + i] = index[i2 + i];
+				index[i2 + i] = temp;
+			}// i
+			return (true);
+		}// permute_indexes 
 		bool update_candidates(void) {
 			MatElemTypePtrVector &oVec = this->_vec;
 			const size_t n = oVec.size();

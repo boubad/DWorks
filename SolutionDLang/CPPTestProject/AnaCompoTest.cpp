@@ -5,6 +5,7 @@
 ///////////////////
 #include <indivs.h>
 #include <matelem.h>
+#include <anacompo.h>
 //////////////////////////////////////
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace info;
@@ -34,12 +35,13 @@ namespace CPPTestProject
 	typedef MatElem<DistanceType> MatElemType;
 	typedef MatElemSort<IndexType, DistanceType> MatElemSortType;
 	typedef IndexedMatData<DataType, IndexType, StringType> IndexedMatDataType;
+	typedef IntraEigenSolver<double> IntraEigenSolverType;
 	///////////////////////////////////////////
 	TEST_CLASS(UnitTestMatElem)
 	{
 	public:
 		//
-		TEST_METHOD(TestArrangeMat)
+		TEST_METHOD(TestAnaCompoMat)
 		{
 			StringTypeVector rowNames;
 			StringTypeVector colNames;
@@ -47,26 +49,30 @@ namespace CPPTestProject
 			size_t nRows = 0;
 			DataType maxVal = 1000;
 			DataType minVal = 0;
-			std::valarray<DataType> data;
+			std::valarray<double> data;
 			InfoTestData::get(nRows, nCols, data, &rowNames, &colNames);
 			Assert::IsTrue(nCols > 1);
 			Assert::IsTrue(nRows > 5);
 			const size_t nTotal = (size_t)(nCols * nRows);
 			Assert::AreEqual(nTotal, data.size());
-			MatDataType oMat(nRows, nCols, &data, &rowNames, &colNames);
-			std::valarray<DataType> oTransfData;
-			{
-				std::valarray<double> t;
-				oMat.normalize_data(t);
-				MatData<double> zMat(nRows, nCols, &t);
-				bool b = zMat.recode_data(oTransfData, maxVal, minVal);
-				Assert::IsTrue(b);
-			}
-			MatDataType xMat(nRows, nCols, &oTransfData, &rowNames, &colNames);
 			//
-			//IndivsType oIndivs(&xMat,DataMode::modeCol);
+			size_t nFacts = 0;
+			std::valarray<double> oVars, oInds;
+			bool bRet = IntraEigenSolverType::compute_anacompo(nRows, nCols, data, nFacts, oVars, oInds);
+			Assert::IsTrue(bRet);
+			Assert::IsTrue(nFacts > 0);
+			Assert::IsTrue(nFacts <= nCols);
+			Assert::IsTrue(oVars.size() >= (size_t)(nCols * nFacts));
+			Assert::IsTrue(oInds.size() >= (size_t)(nRows * nFacts));
+			//
 			std::vector<IndexType> rowindex, colindex;
+			//
 			{
+				MatData<double> oMat(nRows, nFacts, &oInds);
+				std::valarray<DataType> oTransfData;
+				bool b = oMat.recode_data(oTransfData, maxVal, minVal);
+				Assert::IsTrue(b);
+				MatDataType xMat(nRows, nFacts, &oTransfData);
 				IndivsType oIndivs(&xMat);
 				std::vector<DistanceType> distances;
 				oIndivs.compute_distances(distances);
@@ -90,14 +96,20 @@ namespace CPPTestProject
 					IndexType id = *jt;
 					const IndivType *p = oIndivs.indiv(id);
 					Assert::IsNotNull(p);
-					os << p->id();
+					os << p->index();
 				}// jt
 				 /////////////////////
 				std::wstring sd = os.str();
 				Logger::WriteMessage(sd.c_str());
-			}
+			}// indivs
+			//
 			{
-				IndivsType oIndivs(&xMat, DataMode::modeCol);
+				MatData<double> oMat(nCols, nFacts, &oVars);
+				std::valarray<DataType> oTransfData;
+				bool b = oMat.recode_data(oTransfData, maxVal, minVal);
+				Assert::IsTrue(b);
+				MatDataType xMat(nCols, nFacts, &oTransfData);
+				IndivsType oIndivs(&xMat);
 				std::vector<DistanceType> distances;
 				oIndivs.compute_distances(distances);
 				const size_t n = oIndivs.indivs_count();
@@ -120,14 +132,16 @@ namespace CPPTestProject
 					IndexType id = *jt;
 					const IndivType *p = oIndivs.indiv(id);
 					Assert::IsNotNull(p);
-					os << p->id();
+					os << p->index();
 				}// jt
 				 /////////////////////
 				std::wstring sd = os.str();
 				Logger::WriteMessage(sd.c_str());
-			}
+			}// vars
+			//
 			////////////////////////////////////
-			IndexedMatDataType rMat(&xMat);
+			MatData<double> kMat(nRows, nCols, &data, &rowNames, &colNames);
+			IndexedMatData<double> rMat(&kMat);
 			rMat.colindex(colindex);
 			rMat.rowindex(rowindex);
 			{

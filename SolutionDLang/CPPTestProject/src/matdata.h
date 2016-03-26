@@ -179,7 +179,7 @@ namespace info {
 			return (true);
 		}// normalize_data
 		template <typename X>
-		bool recode_data(std::valarray<X> &vRet, const X xMax = (X)255, const X xMin = (X)0) const {
+		bool recode_data(std::valarray<X> &vRet, const X xMax = (X)1000, const X xMin = (X)0) const {
 			assert(xMin < xMax);
 			assert(this->is_valid());
 			const size_t nRows = this->rows();
