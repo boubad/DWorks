@@ -3,9 +3,9 @@
 ///////////////////////////////////
 #include "infotestdata.h"
 ///////////////////
+#include <>
 #include <indivs.h>
 #include <matelem.h>
-#include <anacompo.h>
 //////////////////////////////////////
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace info;
@@ -35,57 +35,40 @@ namespace CPPTestProject
 	typedef MatElem<DistanceType> MatElemType;
 	typedef MatElemSort<IndexType, DistanceType> MatElemSortType;
 	typedef IndexedMatData<DataType, IndexType, StringType> IndexedMatDataType;
-	typedef IntraEigenSolver<double> IntraEigenSolverType;
 	///////////////////////////////////////////
 	TEST_CLASS(UnitTestMatElem)
 	{
 	public:
 		//
-		TEST_METHOD(TestAnaCompoMat)
+		TEST_METHOD(TestArrangeMat)
 		{
-			EuclideDistanceFunc<DataType, DistanceType> oBaseDist;
 			StringTypeVector rowNames;
 			StringTypeVector colNames;
 			size_t nCols = 0;
 			size_t nRows = 0;
 			DataType maxVal = 1000;
 			DataType minVal = 0;
-			std::valarray<double> data;
+			std::valarray<DataType> data;
 			InfoTestData::get(nRows, nCols, data, &rowNames, &colNames);
 			Assert::IsTrue(nCols > 1);
 			Assert::IsTrue(nRows > 5);
 			const size_t nTotal = (size_t)(nCols * nRows);
 			Assert::AreEqual(nTotal, data.size());
-			//
-			size_t nFacts = 0;
-			std::valarray<double> oVars, oInds, oFreq;
-			bool bRet = IntraEigenSolverType::compute_anacompo(nRows, nCols, data, nFacts, oFreq, oVars, oInds);
-			Assert::IsTrue(bRet);
-			Assert::IsTrue(nFacts > 0);
-			Assert::IsTrue(nFacts <= nCols);
-			Assert::IsTrue(oFreq.size() >= nFacts);
-			Assert::IsTrue(oVars.size() >= (size_t)(nCols * nFacts));
-			Assert::IsTrue(oInds.size() >= (size_t)(nRows * nFacts));
-			//
-			std::valarray<double> tt = oFreq * oFreq;
-			double somme = tt.sum();
-			Assert::IsTrue(somme > 0.0);
-			for (size_t i = 0; i < nFacts; ++i) {
-				double x = oFreq[i];
-				double xx = tt[i] / somme;
-				oFreq[i] = xx;
-			}
-			WeightedDistanceFunc<DataType, DistanceType, double> fDist(oBaseDist, oFreq);
-			//
-			std::vector<IndexType> rowindex, colindex;
-			//
+			MatDataType oMat(nRows, nCols, &data, &rowNames, &colNames);
+			std::valarray<DataType> oTransfData;
 			{
-				MatData<double> oMat(nRows, nFacts, &oInds);
-				std::valarray<DataType> oTransfData;
-				bool b = oMat.recode_data(oTransfData, maxVal, minVal);
+				std::valarray<double> t;
+				oMat.normalize_data(t);
+				MatData<double> zMat(nRows, nCols, &t);
+				bool b = zMat.recode_data(oTransfData, maxVal, minVal);
 				Assert::IsTrue(b);
-				MatDataType xMat(nRows, nFacts, &oTransfData);
-				IndivsType oIndivs(&xMat, DataMode::modeRow, &fDist);
+			}
+			MatDataType xMat(nRows, nCols, &oTransfData, &rowNames, &colNames);
+			//
+			//IndivsType oIndivs(&xMat,DataMode::modeCol);
+			std::vector<IndexType> rowindex, colindex;
+			{
+				IndivsType oIndivs(&xMat);
 				std::vector<DistanceType> distances;
 				oIndivs.compute_distances(distances);
 				const size_t n = oIndivs.indivs_count();
@@ -108,20 +91,14 @@ namespace CPPTestProject
 					IndexType id = *jt;
 					const IndivType *p = oIndivs.indiv(id);
 					Assert::IsNotNull(p);
-					os << p->index();
+					os << p->id();
 				}// jt
 				 /////////////////////
 				std::wstring sd = os.str();
 				Logger::WriteMessage(sd.c_str());
-			}// indivs
-			//
+			}
 			{
-				MatData<double> oMat(nCols, nFacts, &oVars);
-				std::valarray<DataType> oTransfData;
-				bool b = oMat.recode_data(oTransfData, maxVal, minVal);
-				Assert::IsTrue(b);
-				MatDataType xMat(nCols, nFacts, &oTransfData);
-				IndivsType oIndivs(&xMat, DataMode::modeRow, &fDist);
+				IndivsType oIndivs(&xMat, DataMode::modeCol);
 				std::vector<DistanceType> distances;
 				oIndivs.compute_distances(distances);
 				const size_t n = oIndivs.indivs_count();
@@ -144,16 +121,14 @@ namespace CPPTestProject
 					IndexType id = *jt;
 					const IndivType *p = oIndivs.indiv(id);
 					Assert::IsNotNull(p);
-					os << p->index();
+					os << p->id();
 				}// jt
 				 /////////////////////
 				std::wstring sd = os.str();
 				Logger::WriteMessage(sd.c_str());
-			}// vars
-			//
+			}
 			////////////////////////////////////
-			MatData<double> kMat(nRows, nCols, &data, &rowNames, &colNames);
-			IndexedMatData<double> rMat(&kMat);
+			IndexedMatDataType rMat(&xMat);
 			rMat.colindex(colindex);
 			rMat.rowindex(rowindex);
 			{

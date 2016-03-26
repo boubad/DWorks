@@ -11,12 +11,12 @@
 #include <chrono>
 ////////////////////////////////////////
 namespace info {
-	///////////////////////////////////////////////
-#ifdef TOTO
-	size_t convert_int_to_binary_string(const int n, std::wstring &sRet) {
+	////////////////////////////////////////////////
+	template <typename T=int>
+	size_t global_integer_to_binary_string(const T n, std::wstring &sRet) {
 		assert(n >= 0);
 		sRet.clear();
-		int nx = n;
+		int nx = (int)n;
 		if (nx == 0) {
 			sRet = L"0";
 		}
@@ -33,31 +33,7 @@ namespace info {
 			}// nx
 		}
 		return (sRet.size());
-	}// convert_int_to_binary_string
-#endif
-#ifdef TOTO
-	size_t convert_int_to_binary_string(const int n, std::string &sRet) {
-		assert(n >= 0);
-		sRet.clear();
-		int nx = n;
-		if (nx == 0) {
-			sRet = "0";
-		}
-		else {
-			while (nx > 0) {
-				int r = nx % 2;
-				if (r != 0) {
-					sRet = "1" + sRet;
-				}
-				else {
-					sRet = "0" + sRet;
-				}
-				nx = nx / 2;
-			}// nx
-		}
-		return (sRet.size());
-	}// convert_int_to_binary_string
-#endif // TOTO
+	}// info_integer_to_binary_string
 	///////////////////////////////////////////////
 	template <typename T, typename U = int>
 	bool make_discrete(const std::valarray<T> &data, size_t &nClasses, 
