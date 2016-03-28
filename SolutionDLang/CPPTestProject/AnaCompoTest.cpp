@@ -41,6 +41,33 @@ namespace CPPTestProject
 	{
 	public:
 		//
+		TEST_METHOD(TestComputeStats)
+		{
+			StringTypeVector rowNames;
+			StringTypeVector colNames;
+			size_t nCols = 0;
+			size_t nRows = 0;
+			std::valarray<double> data;
+			InfoTestData::get_conso(nRows, nCols, data, &rowNames, &colNames);
+			Assert::IsTrue(nCols > 1);
+			Assert::IsTrue(nRows > 5);
+			const size_t nTotal = (size_t)(nCols * nRows);
+			Assert::AreEqual(nTotal, data.size());
+			//
+			{
+				std::valarray<double> oMeans, oStds, oCorr;
+				bool bRet = IntraEigenSolver<double>::compute_stats(nRows, nCols, data, oMeans, oStds, oCorr);
+				Assert::IsTrue(bRet);
+			}
+			{
+				size_t nFacts = 0;
+				std::valarray<double> oMeans, oStds, oCorr, oFreq, oVals, oVecs, oVars, oInds;
+				bool bRet = IntraEigenSolver<double>::compute_anacompo(nRows, nCols,
+					data, oMeans, oStds, oCorr, nFacts, oFreq, oVals, oVecs, oVars, oInds);
+				Assert::IsTrue(bRet);
+			}
+		}// TestCompiuteStats
+		//
 		TEST_METHOD(TestAnaCompoMat)
 		{
 			EuclideDistanceFunc<DataType, DistanceType> oBaseDist;

@@ -25,8 +25,6 @@ namespace info {
 		virtual ~VariableDesc(){}
 		virtual VariableType variableType(void) const = 0;
 		virtual bool is_valid(void) const = 0;
-		template <class T>
-		virtual bool to_bool_array(const std::vector<T> &data, std::vector<bool> &vRet) const = 0;
 	public:
 		const StringType & shortName(void) const {
 			return (this->_shortName);
@@ -50,7 +48,7 @@ namespace info {
 		VariableDesc() {}
 		VariableDesc(const StringType &sname,
 			const StringType &lname = StringType(),
-			const StringType &desc = StringType()) :_shortname(sname), _longname(lname), _description(desc) {}
+			const StringType &desc = StringType()) :_shortName(sname), _longName(lname), _description(desc) {}
 		VariableDesc(const VariableDescType &other) :_shortName(other._shortName), _longName(other._longName),
 			_description(other._description) {}
 		VariableDescType & operator=(const VariableDescType &other) {
@@ -101,68 +99,51 @@ namespace info {
 		}//convert_to_bool_array
 	}; // class VariableDesc<STRINGTYPE>
 	///////////////////////////////////////////////
-	template <typename T, class S = std::wstring> 
+	template <class S = std::wstring> 
 	class NumVariableDesc : public VariableDesc<S> {
 	public:
-		typedef T DataType;
 		typedef S StringType;
 		//
 		typedef VariableDesc<StringType> VariableDescType;
-		typedef NumVariableDesc<DataType, StringType> NumVariableDescType;
-	privat
-		DataType _vmin;
-		DataType _vmax;
+		typedef NumVariableDesc<StringType> NumVariableDescType;
+	private:
+		int	_nMax;
 	public:
-		NumVariableDesc():_vmin(0),_vmax(0){}
+		NumVariableDesc():_nMax(7){}
 		NumVariableDesc(const StringType &sname,
 			const StringType &lname = StringType(),
-			const StringType &desc = StringType()) : VariableDescType(sname,lname,desc),
-			_vmin(0),_vmax(0){}
-		NumVariableDesc(const NumVariableDescType &other) : VariableDescType(other),
-			_vmin(other._vmin), _vmax(other._vmax) {}
+			const StringType &desc = StringType()) : VariableDescType(sname,lname,desc),_nMax(7){}
+		NumVariableDesc(const NumVariableDescType &other) : VariableDescType(other),_Nmax(other._nMax){}
 		NumVariableDescType & operator=(const NumVariableDescType &other) {
 			if (this != &other) {
 				VariableDescType::operator=(other);
-				this->_vmin = other._vmin;
-				this->_vmax = other._vmax;
+				this->_nMax = other._nMax;
 			}
 			return (*this);
 		}
 		virtual ~NumVariableDesc(){}
 	public:
+		int max_level(void) const {
+			return (this->_nMax);
+		}
+		void max_level(int n) {
+			if (n > 1) {
+				this->_nMax = n;
+			}
+		}
 		virtual VariableType variableType(void) const {
 			return (VariableType::numType);
 		}
 		virtual bool is_valid(void) const {
-			return (this->_min < this->_vmax);
+			return (this->_nMax > 1);
 		}
 		template <class X>
-		virtual bool to_bool_array(const std::vector<X> &data, std::vector<bool> &vRet) const {
-			size_t nClasses = 5;
-			std::vector<X> limits;
-			std::vector<int> vals;
-			bool bRet = make_discrete(data, nClasses, limits, vals);
-			if (!bRet) {
-				return (false);
-			}
-			assert(nClasses > 0);
-			size_t nMax = (size_t)(nClasses - 1);
-			this->convert_to_bool_array(vals, nMax, vRet);
+		bool to_bool_array(const std::vector<X> &data, std::vector<bool> &vRet) const {
+			assert(this->is_valid());
+			int nMax = this->_nMax;
+			this->convert_to_bool_array(data, nMax, vRet);
 			return (true);
 		}//to_bool_array
-	public:
-		DataType min(void) const {
-			return (this->_vmin);
-		}
-		void min(const DataType v) {
-			this->_vmin = v;
-		}
-		DataType max(void) const {
-			return (this->_vmax);
-		}
-		void max(const DataType v) {
-			this->_vmax = v;
-		}
 	}; // class NumVariableDesc<T,S>
 	///////////////////////////////////////////
 	template <class S = std::wstring>
@@ -178,11 +159,11 @@ namespace info {
 		OrdinalVariableDesc(const size_t nb,const StringType &sname,
 			const StringType &lname = StringType(),
 			const StringType &desc = StringType()) : VariableDescType(sname, lname, desc),_nbModal(nb){
-			assert(_nbModel > 0);
+			assert(_nbModal > 0);
 		}
 		OrdinalVariableDesc(const OrdinalVariableDescType &other) : VariableDescType(other), _nbModal(nb) {
 		}
-		OrdinalVariableDescType & operator=(constOrdinalVariableDescType &other) {
+		OrdinalVariableDescType & operator=(const OrdinalVariableDescType &other) {
 			if (this != &other) {
 				VariableDescType::operator=(other);
 				this->_nbModal = other._nbModel;
@@ -198,7 +179,7 @@ namespace info {
 			return (this->_nbModal > 0);
 		}
 		template <class X>
-		virtual bool to_bool_array(const std::vector<X> &data, std::vector<bool> &vRet) const {
+		bool to_bool_array(const std::vector<X> &data, std::vector<bool> &vRet) const {
 			assert(this->is_valid());
 			X nMax = (X)(this->_nbModal - 1);
 			this->convert_to_bool_array(data, nMax, vRet);
@@ -243,11 +224,11 @@ namespace info {
 		virtual bool is_valid(void) const {
 			return (!this->_oSet.empty());
 		}
-		virtual bool to_bool_array(const std::vector<StringType> &data, std::vector<bool> &vRet) const {
+		bool to_bool_array(const std::vector<StringType> &data, std::vector<bool> &vRet) const {
 			assert(this->is_valid());
 			std::map<StringType, int> oMap;
 			this->get_modalites(oMap);
-			size_t nMax = (size_t)(oMap.size() - 1);
+			int nMax = (int)(oMap.size() - 1);
 			const size_t n = data.size();
 			std::vector<int> vals(n);
 			for (size_t i = 0; i < n; ++i) {
@@ -255,7 +236,7 @@ namespace info {
 				assert(oMap.find(key) != oMap.end());
 				vals[i] = oMap[key];
 			}// i
-			this->convert_to_bool_array(vals, nMax, vRet);
+			VariableDescType::convert_to_bool_array(vals, nMax, vRet);
 			return (true);
 		}//to_bool_array
 	public:
@@ -300,8 +281,7 @@ namespace info {
 			return (true);
 		}
 	public:
-		template <class T>
-		virtual bool to_bool_array(const std::vector<bool> &data, std::vector<bool> &vRet) const {
+		bool to_bool_array(const std::vector<bool> &data, std::vector<bool> &vRet) const {
 			vRet = data;
 			return (true);
 		}//to_bool_array

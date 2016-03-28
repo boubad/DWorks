@@ -147,7 +147,133 @@ namespace info {
 			}
 			return (true);
 		}
-
+		//////////////////////////////////////////////
+		template<typename X, class ALLOCX, class ALLOCT>
+		static bool compute_stats(const size_t nr, const size_t nv,
+			const std::vector<X, ALLOCX> &oSrc, std::vector<T, ALLOCT> &oMeans,
+			std::vector<T, ALLOCT> &oStds, std::vector<T, ALLOCT> &oCorr) {
+			//
+			assert(nv > 1);
+			assert(nr > nv);
+			//
+			const size_t nnv = nv * nv;
+			const size_t nnr = nr * nv;
+			//
+			assert(oSrc.size() >= nnr);
+			//
+			oMeans = std::vector<T, ALLOCT >(nv);
+			oStds = std::vector<T, ALLOCT >(nv);
+			oCorr = std::vector<T, ALLOCT >(nnv);
+			//
+			std::vector<double> oTemp(nnr);
+			std::vector<double> xCorr(nnv);
+			std::vector<double> xStds(nv);
+			bool bRet = true;
+			double dnr = (double)nr;
+			double dnr1 = (double)(nr - 1);
+			for (size_t ivar = 0; ivar < nv; ++ivar) {
+				xCorr[ivar * nv + ivar] = 1.0;
+				oCorr[ivar * nv + ivar] = (T) 1.0;
+				double s = 0.0;
+				for (size_t i = 0; i < nr; ++i) {
+					const size_t k = i * nv + ivar;
+					double x = (double)oSrc[k];
+					oTemp[k] = x;
+					s += x;
+				} // i
+				double moy = s / dnr;
+				oMeans[ivar] = (T)moy;
+				s = 0.0;
+				for (size_t i = 0; i < nr; ++i) {
+					const size_t k = i * nv + ivar;
+					double x = oTemp[k] - moy;
+					oTemp[k] = x;
+					s += x * x;
+				} // i
+				double dvar = s / dnr;
+				if (dvar > 0.0) {
+					double ec1 = std::sqrt(dvar);
+					xStds[ivar] = ec1;
+					oStds[ivar] = (T)ec1;
+					for (size_t ivar1 = 0; ivar1 < ivar; ++ivar1) {
+						double s = 0.0;
+						for (size_t i = 0; i < nr; ++i) {
+							double x = oTemp[i * nv + ivar1]
+								* oTemp[i * nv + ivar];
+							s += x;
+						}
+						s /= dnr;
+						double r = s / (ec1 * xStds[ivar1]);
+						T rt = (T)r;
+						xCorr[ivar * nv + ivar1] = r;
+						oCorr[ivar * nv + ivar1] = rt;
+						xCorr[ivar1 * nv + ivar] = r;
+						oCorr[ivar1 * nv + ivar] = rt;
+					}
+				}
+				else {
+					bRet = false;
+				}
+			}
+			return (bRet);
+		}// compute_stats
+		template<typename X>
+		static bool compute_stats(const size_t nr, const size_t nv,
+			const std::valarray<X> &oSrc, std::valarray<T> &oMeans,
+			std::valarray<T> &oStds, std::valarray<T> &oCorr) {
+			//
+			assert(nv > 1);
+			assert(nr > nv);
+			//
+			const size_t nnv = nv * nv;
+			const size_t nnr = nr * nv;
+			//
+			assert(oSrc.size() >= nnr);
+			//
+			std::valarray<double> means(nv), stds(nv), corrs(nnv), temp(nnr);
+			//
+			for (size_t ivar = 0; ivar < nv; ++ivar) {
+				std::valarray<double> data(nr);
+				for (size_t i = 0; i < nr; ++i) {
+					const size_t ipos = i * nv + ivar;
+					const double d = (double)oSrc[ipos];
+					data[i] = d;
+					temp[ipos] = d;
+				}// i
+				const double moyenne = data.sum() / nr;
+				means[ivar] = moyenne;
+				std::valarray<double> dt = data - moyenne;
+				temp[std::slice(ivar, nr, nv)] = dt;
+				std::valarray<double> dt2 = dt * dt;
+				const double ds2 = dt2.sum() / nr;
+				if (ds2 <= 0.0) {
+					return (false);
+				}
+				stds[ivar] = std::sqrt(ds2);
+			}// ivar
+			//
+			oMeans.resize(nv);
+			oStds.resize(nv);
+			oCorr.resize(nnr);
+			for (size_t ivar1 = 0; ivar1 < nv; ++ivar1) {
+				oMeans[ivar1] = (T)means[ivar1];
+				const double ec1 = stds[ivar1];
+				oStds[ivar1] = (T)ec1;
+				oCorr[ivar1 * nv + ivar1] = 1.0;
+				std::valarray<double> data1 = temp[std::slice(ivar1,nr,nv)];
+				for (size_t ivar2 = 0; ivar2 < ivar1; ++ivar2) {
+					std::valarray<double> data2 = temp[std::slice(ivar2, nr, nv)];
+					std::valarray<double> dt2 = data1 * data2;
+					const double cc = dt2.sum() / nr;
+					const T r = (T)(cc / (ec1 * stds[ivar2]));
+					oCorr[ivar1 * nv + ivar2] = r;
+					oCorr[ivar2 * nv + ivar1] = r;
+				}// ivar2
+			}// ivar1
+			//
+			return (true);
+		}// compute_stats
+		////////////////////////////////////////////////
 		template<typename X, class ALLOCX, class ALLOCT>
 		static bool compute_anacompo(const size_t nr, const size_t nv,
 			const std::vector<X, ALLOCX> &oSrc, std::vector<T, ALLOCT> &oMeans,

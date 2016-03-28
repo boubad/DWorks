@@ -118,7 +118,7 @@ namespace info {
 				vmax[i] = v.max();
 			}// i
 		}//get_cols_min_max
-		bool discretize_data(std::valarray<int> &vRet, const size_t nc = 7) const {
+		bool discretize_data(std::valarray<int> &vRet, const size_t nc = 5) const {
 			assert(nc > 2);
 			assert(this->is_valid());
 			const size_t nRows = this->rows();

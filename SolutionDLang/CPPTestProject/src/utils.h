@@ -37,7 +37,8 @@ namespace info {
 	///////////////////////////////////////////////
 	template <typename T, typename U = int>
 	bool make_discrete(const std::valarray<T> &data, size_t &nClasses, 
-		std::valarray<T> &limits, std::valarray<U> &vals) {
+		std::valarray<T> &limits, std::valarray<U> &vals,
+		const T tMax = 0, const T tMin = 0) {
 		assert(nClasses > 0);
 		const size_t n = data.size();
 		if (n < 3) {
@@ -47,52 +48,63 @@ namespace info {
 			++nClasses;
 		}
 		assert(n >= nClasses);
-		const double vMin = (double)data.min();
-		const double vMax = (double)data.max();
+		double vMin = (double)tMin;
+		double vMax = (double)tMax;
+		if (vMin >= vMax) {
+			vMin = (double)data.min();
+			vMax = (double)data.max();
+		}
 		if (vMin >= vMax) {
 			return false;
 		}
-		std::vector<T> temp(n);
+		std::vector<double> temp(n);
 		for (size_t i = 0; i < n; ++i) {
-			temp[i] = data[i];
+			temp[i] = (double)data[i];
 		}// i
 		std::sort(temp.begin(), temp.end());
 		const size_t n2 = (size_t)(n / 2);
-		double vMed = (double)temp[n2];
+		double vMed = temp[n2];
 		if ((n % 2) == 0) {
-			vMed = (double)((vMed + temp[(n2 - 1)]) / 2);
+			vMed = (vMed + temp[(n2 - 1)]) / 2;
 		}
 		assert(vMed >= vMin);
 		assert(vMed <= vMax);
 		const size_t nc = (size_t)(2 * n2 + 1);
-		const double dxMin = (double)((2 * (vMed - vMin)) / nc);
-		const double dxMax = (double)((2 * (vMax - vMed)) / nc);
+		const double dxMin = (2 * (vMed - vMin)) / nc;
+		const double dxMax = (2 * (vMax - vMed)) / nc;
 		double xMin = vMin;
 		double xMax = vMax;
 		size_t i = 0;
 		size_t j = nClasses;
 		limits.resize(nClasses + 1);
+		std::vector<double> flimits(nClasses + 1);
 		while (i < j) {
-			limits[i++] = (T)xMin;
-			limits[j--] = (T)xMax;
-			xMin = xMin + dxMin;
-			xMax = xMax - dxMax;
+			const double x1 = xMin;
+			const double x2 = xMax;
+			flimits[i] = x1;
+			flimits[j] = x2;
+			limits[i++] = (T)x1;
+			limits[j--] = (T)x2;
+			xMin += dxMin;
+			xMax -= dxMax;
 		}// while (i < j)
 		vals.resize(n);
 		const size_t nb = limits.size();
+		const double d1 = flimits[0];
+		const double d2 = flimits[nClasses];
 		for (size_t i = 0; i < n; ++i) {
-			const T val = data[i];
+			const double val = (double)data[i];
 			size_t ipos = 0;
-			if (val <= vMin) {
+			if (val <= d1) {
 				ipos = 0;
 			}
-			else if (val >= vMax) {
+			else if (val >=  d2) {
 				ipos = (size_t)(nClasses - 1);
 			}
 			else {
 				ipos = 0;
 				for (size_t j = 0; j < nb; ++j) {
-					if (val <= limits[j]) {
+					if (val <= flimits[j]) {
 						break;
 					}
 					++ipos;

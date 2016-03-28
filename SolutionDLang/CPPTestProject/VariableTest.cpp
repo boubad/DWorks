@@ -3,7 +3,7 @@
 ///////////////////////////////////
 #include "infotestdata.h"
 ///////////////////
-#include <>
+#include <variable.h>
 #include <indivs.h>
 #include <matelem.h>
 //////////////////////////////////////
@@ -36,109 +36,154 @@ namespace CPPTestProject
 	typedef MatElemSort<IndexType, DistanceType> MatElemSortType;
 	typedef IndexedMatData<DataType, IndexType, StringType> IndexedMatDataType;
 	///////////////////////////////////////////
-	TEST_CLASS(UnitTestMatElem)
+	TEST_CLASS(UnitTestVariable)
 	{
 	public:
 		//
-		TEST_METHOD(TestArrangeMat)
+		TEST_METHOD(TestNumVariableDesc)
 		{
-			StringTypeVector rowNames;
-			StringTypeVector colNames;
-			size_t nCols = 0;
-			size_t nRows = 0;
-			DataType maxVal = 1000;
-			DataType minVal = 0;
-			std::valarray<DataType> data;
-			InfoTestData::get(nRows, nCols, data, &rowNames, &colNames);
-			Assert::IsTrue(nCols > 1);
-			Assert::IsTrue(nRows > 5);
-			const size_t nTotal = (size_t)(nCols * nRows);
-			Assert::AreEqual(nTotal, data.size());
-			MatDataType oMat(nRows, nCols, &data, &rowNames, &colNames);
-			std::valarray<DataType> oTransfData;
-			{
-				std::valarray<double> t;
-				oMat.normalize_data(t);
-				MatData<double> zMat(nRows, nCols, &t);
-				bool b = zMat.recode_data(oTransfData, maxVal, minVal);
-				Assert::IsTrue(b);
-			}
-			MatDataType xMat(nRows, nCols, &oTransfData, &rowNames, &colNames);
+			StringType sName(L"TestVariable");
+			StringType lName(L"TestVariable Long name");
+			StringType desc(L"TestVariable description");
+			const size_t nbModalites = 8;
+			NumVariableDesc<StringType> oDesc(sName, lName, desc);
 			//
-			//IndivsType oIndivs(&xMat,DataMode::modeCol);
-			std::vector<IndexType> rowindex, colindex;
-			{
-				IndivsType oIndivs(&xMat);
-				std::vector<DistanceType> distances;
-				oIndivs.compute_distances(distances);
-				const size_t n = oIndivs.indivs_count();
-				MatElemSortType oSort(n, &distances);
-				std::vector<IndexType> index(n);
-				for (size_t i = 0; i < n; ++i) {
-					index[i] = i;
+			Assert::AreEqual(sName, oDesc.shortName());
+			Assert::AreEqual(lName, oDesc.longName());
+			Assert::AreEqual(desc, oDesc.description());
+			//
+			VariableType oType = VariableType::numType;
+			VariableType cType = oDesc.variableType();
+			Assert::IsTrue(oDesc.is_valid());
+			//
+			const size_t n = 10;
+			std::vector<int> data;
+			for (size_t i = 0; i < n; ++i) {
+				int nx = ::rand() % 8;
+				data.push_back(nx);
+			}// i
+			std::vector<bool> dest;
+			bool bRet = oDesc.to_bool_array(data, dest);
+			Assert::IsTrue(bRet);
+		}//TestOrdinalVariableDesc
+		//
+		TEST_METHOD(TestOrdinalVariableDesc)
+		{
+			StringType sName(L"TestVariable");
+			StringType lName(L"TestVariable Long name");
+			StringType desc(L"TestVariable description");
+			const size_t nbModalites = 8;
+			OrdinalVariableDesc<StringType> oDesc(nbModalites, sName,lName, desc);
+			//
+			Assert::AreEqual(sName, oDesc.shortName());
+			Assert::AreEqual(lName, oDesc.longName());
+			Assert::AreEqual(desc, oDesc.description());
+			//
+			VariableType oType = VariableType::ordinalType;
+			VariableType cType = oDesc.variableType();
+			Assert::IsTrue(oDesc.is_valid());
+			//
+			Assert::AreEqual(nbModalites, oDesc.modalites_count());
+			const size_t n = 10;
+			std::vector<int> data;
+			for (size_t i = 0; i < n; ++i) {
+				int nx = ::rand() % 8;
+				data.push_back(nx);
+			}// i
+			std::vector<bool> dest;
+			bool bRet = oDesc.to_bool_array(data, dest);
+			Assert::IsTrue(bRet);
+		}//TestOrdinalVariableDesc
+		 //
+		//
+		TEST_METHOD(TestNominalVariableDesc)
+		{
+			StringType sName(L"TestVariable");
+			StringType lName(L"TestVariable Long name");
+			StringType desc(L"TestVariable description");
+			std::vector<StringType> ovec;
+			std::set<StringType> oSet;
+			oSet.insert(L"zero");
+			oSet.insert(L"one");
+			oSet.insert(L"two");
+			oSet.insert(L"three");
+			for (auto it = oSet.begin(); it != oSet.end(); ++it) {
+				ovec.push_back(*it);
+			}
+			NominalVariableDesc<StringType> oDesc(sName, oSet, lName, desc);
+			//
+			Assert::AreEqual(sName, oDesc.shortName());
+			Assert::AreEqual(lName, oDesc.longName());
+			Assert::AreEqual(desc, oDesc.description());
+			//
+			VariableType oType = VariableType::nominalType;
+			VariableType cType = oDesc.variableType();
+			//Assert::AreEqual(oType, cType);
+			Assert::IsTrue(oDesc.is_valid());
+			//
+			oDesc.add_modalite(L"four");
+			oDesc.add_modalite(L"five");
+			oDesc.add_modalite(L"six");
+			oDesc.add_modalite(L"seven");
+			//
+			std::map<StringType, int> oMap;
+			oDesc.get_modalites(oMap);
+			std::map<int, StringType> rMap;
+			for (auto it = oMap.begin(); it != oMap.end(); ++it) {
+				StringType val = (*it).first;
+				int key = (*it).second;
+				rMap[key] = val;
+			}// it
+			const size_t nn = oMap.size();
+			const size_t n = 10;
+			std::vector<StringType> data;
+			for (size_t i = 0; i < n; ++i) {
+				int nx = ::rand() % 8;
+				if (rMap.find(nx) != rMap.end()) {
+					StringType s = rMap[nx];
+					data.push_back(s);
 				}
-				DistanceType crit1 = oSort.criteria(index);
-				oSort.arrange(index);
-				rowindex = index;
-				DistanceType crit2 = oSort.criteria(index);
-				std::wstringstream os;
-				////////////////////////////////////////
-				os << L"Start crit: " << crit1 << L"\t\tEnd crit: " << crit2 << std::endl;
-				for (auto jt = index.begin(); jt != index.end(); ++jt) {
-					if (jt != index.begin()) {
-						os << L", ";
-					}
-					IndexType id = *jt;
-					const IndivType *p = oIndivs.indiv(id);
-					Assert::IsNotNull(p);
-					os << p->id();
-				}// jt
-				 /////////////////////
-				std::wstring sd = os.str();
-				Logger::WriteMessage(sd.c_str());
-			}
-			{
-				IndivsType oIndivs(&xMat, DataMode::modeCol);
-				std::vector<DistanceType> distances;
-				oIndivs.compute_distances(distances);
-				const size_t n = oIndivs.indivs_count();
-				MatElemSortType oSort(n, &distances);
-				std::vector<IndexType> index(n);
-				for (size_t i = 0; i < n; ++i) {
-					index[i] = i;
+			}// i
+			std::vector<bool> dest;
+			bool bRet = oDesc.to_bool_array(data, dest);
+			Assert::IsTrue(bRet);
+		}//TestNominalVariableDesc
+		//
+		TEST_METHOD(TestBooleanVariableDesc)
+		{
+			StringType sName(L"TestVariable");
+			StringType lName(L"TestVariable Long name");
+			StringType desc(L"TestVariable description");
+			BooleanVariableDesc<StringType> oDesc(sName,lName,desc);
+			//
+			Assert::AreEqual(sName, oDesc.shortName());
+			Assert::AreEqual(lName, oDesc.longName());
+			Assert::AreEqual(desc, oDesc.description());
+			//
+			VariableType oType = VariableType::booleanType;
+			VariableType cType = oDesc.variableType();
+			Assert::IsTrue(oType == cType);
+			Assert::IsTrue(oDesc.is_valid());
+			//
+			const size_t n = 10;
+			std::vector<bool> data;
+			for (size_t i = 0; i < n; ++i) {
+				if ((::rand() % 2) == 1) {
+					data.push_back(true);
 				}
-				DistanceType crit1 = oSort.criteria(index);
-				oSort.arrange(index);
-				colindex = index;
-				DistanceType crit2 = oSort.criteria(index);
-				std::wstringstream os;
-				////////////////////////////////////////
-				os << L"Start crit: " << crit1 << L"\t\tEnd crit: " << crit2 << std::endl;
-				for (auto jt = index.begin(); jt != index.end(); ++jt) {
-					if (jt != index.begin()) {
-						os << L", ";
-					}
-					IndexType id = *jt;
-					const IndivType *p = oIndivs.indiv(id);
-					Assert::IsNotNull(p);
-					os << p->id();
-				}// jt
-				 /////////////////////
-				std::wstring sd = os.str();
-				Logger::WriteMessage(sd.c_str());
-			}
-			////////////////////////////////////
-			IndexedMatDataType rMat(&xMat);
-			rMat.colindex(colindex);
-			rMat.rowindex(rowindex);
-			{
-				std::wstringstream os;
-				os << std::endl << std::endl;
-				os << rMat;
-				std::wstring sd = os.str();
-				Logger::WriteMessage(sd.c_str());
-			}
-			////////////////////////////////
-		}// estClusterizeIndivsDouble
-	};
+				else {
+					data.push_back(false);
+				}
+			}// i
+			std::vector<bool> dest;
+			bool bRet = oDesc.to_bool_array(data, dest);
+			Assert::AreEqual(n, dest.size());
+			for (size_t i = 0; i < n; ++i) {
+				bool b1 = data[i];
+				bool b2 = dest[i];
+				Assert::AreEqual(b1, b2);
+			}// i
+		}//TestBooleanVariableDesc
+		
+	};// class UnitTestVariable
 }
