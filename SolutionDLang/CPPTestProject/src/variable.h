@@ -185,6 +185,17 @@ namespace info {
 			this->convert_to_bool_array(data, nMax, vRet);
 			return (true);
 		}//to_bool_array
+		template <class X>
+		bool to_bool_array(const std::valarray<X> &data, std::vector<bool> &vRet) const {
+			assert(this->is_valid());
+			const size_t n = data.size();
+			assert(n > 0);
+			std::vector<X> oVec(n);
+			for (size_t i = 0; i < n; ++i) {
+				oVec[i] = data[i];
+			}
+			return this->to_bool_array(oVec, vRet);
+		}//to_bool_array
 	public:
 		size_t modalites_count(void) const {
 			return (this->_nbModal);

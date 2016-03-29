@@ -161,6 +161,7 @@
     <ClInclude Include="infotestdata.h" />
     <ClInclude Include="src\anacompo.h" />
     <ClInclude Include="src\arrangedesc.h" />
+    <ClInclude Include="src\booldistance.h" />
     <ClInclude Include="src\cluster.h" />
     <ClInclude Include="src\clusterize.h" />
     <ClInclude Include="src\clusterizeindivs.h" />
@@ -181,6 +182,7 @@
   <ItemGroup>
     <ClCompile Include="AnaCompoTest.cpp" />
     <ClCompile Include="ArrangeTest.cpp" />
+    <ClCompile Include="BoolDistanceTest.cpp" />
     <ClCompile Include="ClusterizeTest.cpp" />
     <ClCompile Include="infotestdata.cpp" />
     <ClCompile Include="MatDatatTest.cpp" />
