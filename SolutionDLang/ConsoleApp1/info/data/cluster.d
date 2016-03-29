@@ -12,6 +12,10 @@ class ClusterDesc(U) {
 private:
 	U	_index;
 	U[] _members;
+	//
+	invariant {
+		assert(_index >= 0);
+	}// invaraiant
 public:
 	this(){
 		_members = [];
@@ -133,26 +137,31 @@ public:
 		return r;
 	}
 	@property ClusterDesc!(U) desc() 
-	in{
-		assert(!(_desc is null));
+	out(result){
+		assert(!(result is null));
 	}
 	body{
 		return _desc;
 	}
 	@property int count() const 
-		in{
-			assert(!(_desc is null));
-		}out(result) {
+	out(result) {
 			assert(result >= 0);
 		}
 		body
 		{
+			assert(!(this._desc is null));
 			return _desc.count;
 		}
-		@property U[] members() const {
+		@property U[] members() const 
+		out (result){
+			assert(!(result is null));
+		}body{
 			return _desc.members;
 		}
-		@property real trace() const {
+		@property real trace() const
+		out(result){
+			assert(result >= 0);
+		}body{
 			real s = 0;
 			T[] vv = this.value;
 			int n = vv.length;
@@ -162,17 +171,17 @@ public:
 			}
 			return s;
 		}
-		void reset()
-		in {
+		void reset(){
 			assert(!(_desc is null));
-		}body{
 			_desc.reset();
 			_sum = [];
 		}// reset
 		void update_center()
 		{
+			assert(!(_desc is null));
 			immutable int ntotal = _desc.count;
 			if (ntotal > 0){
+				assert(!(_sum is null));
 				immutable int nc = _sum.length;
 				T[] result = [];
 				result.length = nc;
@@ -182,13 +191,14 @@ public:
 				this.value(result);
 			}// ntotal
 		}// update_center
-		bool add_array(in U nIndex, in T[] xdata, in bool bUpdate)
+		bool add_array(in U nIndex, in T[] xdata, in bool bUpdate = false)
 		in {
 			assert(nIndex >= 0);
 			assert(!(xdata is null));
-			assert(!(_desc is null));
+			assert(xdata.length > 0);
 		}
 		body {
+			assert(!(_desc is null));
 			immutable int n = _desc.count;
 			immutable int nc = xdata.length;
 			bool bFound = false;

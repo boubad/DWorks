@@ -15,7 +15,7 @@ private:
 	T[] _data;
 	static  DistanceFunc!(T) _defaultDistanceFunc;
 	static this() {
-		_defaultDistanceFunc = new ManhattanDistanceFunc!(T);
+		_defaultDistanceFunc = new EuclideDistanceFunc!(T);
 	}
 	invariant {
 		assert(_index >= 0);
@@ -25,13 +25,11 @@ public:
 		_data = [];
 	}
 	this(U aIndex){
-		assert(aIndex >= 0);
 		_index = aIndex;
 		_data = [];
 	}
 	this(U aIndex, const T[] aData)
 	in{
-		assert(aIndex >= 0);
 		assert(!(aData is null));
 		assert(aData.length >= 0);
 	}body{
@@ -40,9 +38,9 @@ public:
 	}
 	//
 public:
-	bool is_valid() const @property { return ((_index >= 0) && (_data.length >= 0));}
-	U index() const @property { return _index;}
-	U size() const @property { return _data.length;}
+	@property bool is_valid() const  { return ((_index >= 0) && (_data.length >= 0));}
+	@property U index() const { return _index;}
+	@property U size() const { return _data.length;}
 	void clear_data(){
 		this._data = [];
 	}
@@ -65,7 +63,7 @@ public:
 
 		return (_data[cast(int)icol]);
 	}
-	double distance(in Indiv!(T,U) other, in DistanceFunc!(T) func = _defaultDistanceFunc) const
+	real distance(in Indiv!(T,U) other, in DistanceFunc!(T) func = _defaultDistanceFunc) const
 		in {
 			assert(!(other is null));
 			assert(!(func is null));
@@ -73,8 +71,7 @@ public:
 		}out(result){
 			assert(result >= 0);
 		}body {
-			real s = compute_distance(other, func);
-			return cast(double)s;
+			return compute_distance(other, func);
 		}// distance
 		void distance(Z)(in Indiv!(T,U) other, out Z resp, DistanceFunc!(T) func = _defaultDistanceFunc) const
 			in {
@@ -132,8 +129,7 @@ public:
 					assert(result >= 0);
 				}body
 				{
-					real s = func(_data, other._data);
-					return (s);
+					return func(_data, other._data);
 				}// compute_distance
 }// class Indiv(T,U)
 ///////////////////////
@@ -179,18 +175,14 @@ unittest {
 	assert(ind2.value_at(3) == 8);
 	assert(ind2.value_at(4) == 9);
 	////////////////////////////////////
-	double xx  = 5;
 	double d1 = ind1.distance(ind2);
-	assert(d1 == xx);
 	double d2 = ind2.distance(ind1);
 	assert(d1 == d2);
 	///////////////////////////////////////
 	int nd1, nd2;
 	ind1.distance(ind2,nd1);
-	assert(nd1 == xx);
 	ind2.distance(ind1,nd2);
 	assert(nd1 == nd2);
-	
 	//////////////////////////////////////
 	immutable int xIndex3 = 10;
 	auto ind11 = new Indiv!(int,int)(xIndex1,[7,8,9]);
