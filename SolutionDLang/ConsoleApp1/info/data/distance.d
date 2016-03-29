@@ -1,12 +1,15 @@
 module info.data.distance;
+///////////////////////
+import std.math;
 /////////////////////
 class DistanceFunc(T) {
 	this(){
 	}
-	double opCall(in T[] data1, in T[] data2) const
+	real opCall(in T[] data1, in T[] data2) const
 	in {
 		assert(!(data1 is null));
 		assert(!(data2 is null));
+		assert(data1.length > 0);
 		assert(data2.length == data2.length);
 	}
 	out(result){
@@ -25,9 +28,10 @@ class DistanceFunc(T) {
 			real r = v1 - v2;
 			return (r < 0) ? -r : r;
 		}// compute_one_step
-		double perform_compute(in T[] data1, in T[] data2) const
+		real perform_compute(in T[] data1, in T[] data2) const
 		in {
 				assert(!(data1 is null));
+				assert(data1.length > 0);
 				assert(!(data2 is null));
 				assert(data1.length == data2.length);
 		}
@@ -35,13 +39,12 @@ class DistanceFunc(T) {
 			assert(result >= 0);
 		}
 		body{
-			assert(data1.length == data2.length);
 			real s = 0;
 			immutable int n = data1.length;
 			for (int i = 0; i < n; ++i){
 				s  += this.compute_one_step(data1[i],data2[i],i);
 			}// i
-			return cast(double)s;
+			return (s/n);
 		}// opCall
 }// class DistanceFunc
 /////////////////////////////////////////
@@ -60,6 +63,10 @@ protected:
 		real r = v1 - v2;
 		return  (r * r);
 	}// compute_one_step
+	override real perform_compute(in T[] data1, in T[] data2) const{
+		real s = super.perform_compute(data1,data2);
+		return sqrt(s);
+	}//perform_compute
 }// class EuclideDistanceFunc
 /////////////////////////////////////////////
 class WeightedDistanceFunc(T,W = float) : DistanceFunc!(T) {
@@ -92,25 +99,25 @@ class WeightedDistanceFunc(T,W = float) : DistanceFunc!(T) {
 ////////////////////////////////
 unittest {
 	/////////////////////////////
-	immutable double epsilon = 0.00001;
+	immutable real epsilon = 0.00001;
 	immutable int[] data1 = [0,1,2,3,4];
 	immutable int[] data2 = [5,6,7,8,9];
 	immutable float[] weights = [0.1, 0.2, 0.3, 0.4,0.5];
 	/////////////////////////////////
-	immutable double dx0 = 25;
+	immutable double dx0 = 5;
 	auto fnManHattan = new ManhattanDistanceFunc!(int);
-	double d1 = fnManHattan(data1,data2);
+	real d1 = fnManHattan(data1,data2);
 	assert(d1 == dx0);
 	///////////////////////////////////
-	immutable double dr1 = 7.5;
+	immutable real dr1 = 1.5;
 	auto fnW1 = new WeightedDistanceFunc!(int,float)(weights,fnManHattan);
-	double d2 = fnW1(data1,data2);
+	real d2 = fnW1(data1,data2);
 	auto t = (d2 > dr1) ? d2 - dr1 : dr1 - d2;
 	assert(t < epsilon);
 	///////////////////////////////
-	immutable double dy0 = 125;
+	immutable real dy0 = 5;
 	auto fnEuclide = new EuclideDistanceFunc!(int);
-	double d3 = fnEuclide(data1,data2);
+	real d3 = fnEuclide(data1,data2);
 	assert(d3 == dy0);
 	///////////////////////////////////
 }// unittest

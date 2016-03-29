@@ -179,7 +179,7 @@ unittest {
 	assert(ind2.value_at(3) == 8);
 	assert(ind2.value_at(4) == 9);
 	////////////////////////////////////
-	double xx  = 25;
+	double xx  = 5;
 	double d1 = ind1.distance(ind2);
 	assert(d1 == xx);
 	double d2 = ind2.distance(ind1);
