@@ -4,6 +4,7 @@
 ///////////////////////////
 #include <cassert>
 #include <valarray>
+#include <vector>
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -19,7 +20,8 @@ namespace info {
 		typedef S StringType;
 		//
 		typedef std::valarray<DataType> DataTypeArray;
-		typedef Indiv<DataType, IndexType,StringType> IndivType;
+		typedef std::vector<DataType> DataTypeVector;
+		typedef Indiv<DataType, IndexType, StringType> IndivType;
 		typedef std::shared_ptr<IndivType> IndivTypePtr;
 	private:
 		IndexType _index;
@@ -28,11 +30,28 @@ namespace info {
 	public:
 		Indiv() :_index(0) {}
 		Indiv(const IndexType ii) :_index(ii) {}
-		Indiv(const IndexType ii, const StringType &sid) :_index(ii),_id(sid) {}
+		Indiv(const IndexType ii, const StringType &sid) :_index(ii), _id(sid) {}
 		Indiv(const IndexType ii, const DataTypeArray &oAr) :_index(ii), _data(oAr) {}
-		Indiv(const IndexType ii, const StringType &sid,const DataTypeArray &oAr) :
+		Indiv(const IndexType ii, const DataTypeVector &oVec) :_index(ii) {
+			const size_t n = oVec.size();
+			DataTypeArray & w = this->_data;
+			w.resize(n);
+			for (size_t i = 0; i < n; ++i) {
+				w[i] = oVec[i];
+			}// i
+		}
+		Indiv(const IndexType ii, const StringType &sid, const DataTypeArray &oAr) :
 			_index(ii), _id(sid), _data(oAr) {}
-		Indiv(const IndivType &other) :_index(other._index),_id(other._id), _data(other._data) {}
+		Indiv(const IndexType ii, const StringType &sid, const DataTypeVector &oVec) :
+			_index(ii), _id(sid) {
+			const size_t n = oVec.size();
+			DataTypeArray & w = this->_data;
+			w.resize(n);
+			for (size_t i = 0; i < n; ++i) {
+				w[i] = oVec[i];
+			}// i
+		}
+		Indiv(const IndivType &other) :_index(other._index), _id(other._id), _data(other._data) {}
 		IndivType & operator=(const IndivType &other) {
 			if (this != &other) {
 				this->_index = other._index;
@@ -72,6 +91,22 @@ namespace info {
 		void value(const DataTypeArray &oAr) {
 			this->_data = oAr;
 		}
+		void value(DataTypeVector &oVec) const {
+			const DataTypeArray &oAr = this->_data;
+			const size_t n = oAr.size();
+			oVec.resize(n);
+			for (size_t i = 0; i < n; ++i) {
+				oVec[i] = oAr[i];
+			}
+		}
+		void value(const DataTypeVector &oVec) {
+			DataTypeArray &oAr = this->_data;
+			const size_t n = oVec.size();
+			oAr.resize(n);
+			for (size_t i = 0; i < n; ++i) {
+				oAr[i] = oVec[i];
+			}
+		}
 		size_t size(void) const {
 			return (this->_data.size());
 		}
@@ -91,21 +126,54 @@ namespace info {
 			s = os.str();
 		}// toString
 		template <typename Z>
-		void distance(const DataTypeArray &vv1, const DataTypeArray &vv2, Z &result,
-			const DistanceFunc<T, Z> *pFunc = nullptr) const {
+		static void distance(const DataTypeArray &vv1, const DataTypeArray &vv2, Z &result,
+			const DistanceFunc<T, Z> *pFunc = nullptr)  {
 			if (pFunc == nullptr) {
-				ManhattanDistanceFunc<T, Z> f;
-				res = f(vv1, vv2);
+				EuclideDistanceFunc<T, Z> f;
+				result = f(vv1, vv2);
 			}
 			else {
 				result = (*pFunc)(vv1, vv2);
 			}
 		}// distance
 		template <typename Z>
+		static void distance(const DataTypeVector &vv1, const DataTypeVector &vv2, Z &result,
+			const DistanceFunc<T, Z> *pFunc = nullptr)  {
+			if (pFunc == nullptr) {
+				EuclideDistanceFunc<T, Z> f;
+				result = f(vv1, vv2);
+			}
+			else {
+				result = (*pFunc)(vv1, vv2);
+			}
+		}// distance
+		template <typename Z>
+		void distance(const DataTypeArray &vv1, Z &result,
+			const DistanceFunc<T, Z> *pFunc = nullptr) const {
+			if (pFunc == nullptr) {
+				EuclideDistanceFunc<T, Z> f;
+				result = f(this->value(), vv1);
+			}
+			else {
+				result = (*pFunc)(this->value(), vv1);
+			}
+		}// distance
+		template <typename Z>
+		void distance(const DataTypeVector &vv1, Z &result,
+			const DistanceFunc<T, Z> *pFunc = nullptr) const {
+			if (pFunc == nullptr) {
+				EuclideDistanceFunc<T, Z> f;
+				result = f(this->value(), vv1);
+			}
+			else {
+				result = (*pFunc)(this->value(), vv1);
+			}
+		}// distance
+		template <typename Z>
 		void distance(const IndivType &other, Z &result,
 			const DistanceFunc<T, Z> *pFunc = nullptr) const {
 			if (pFunc == nullptr) {
-				ManhattanDistanceFunc<T, Z> f;
+				EuclideDistanceFunc<T, Z> f;
 				result = f(this->value(), other.value());
 			}
 			else {
@@ -121,13 +189,6 @@ namespace info {
 			}
 			else {
 				this->distance(*p, result, pFunc);
-			}
-			if (pFunc == nullptr) {
-				ManhattanDistanceFunc<T, Z> f;
-				result = f(this->_data, other._data);
-			}
-			else {
-				result = (*pFunc)(this->_data, other._data);
 			}
 		}// distance
 	public:
@@ -148,11 +209,11 @@ namespace info {
 }// namespace info
 ///////////////////////////////////
 template <typename T, typename U, class S>
-std::ostream & operator<<(std::ostream &os, const info::Indiv<T, U,S> &d) {
+std::ostream & operator<<(std::ostream &os, const info::Indiv<T, U, S> &d) {
 	return (d.write_to(os));
 }
 template <typename T, typename U, class S>
-std::wostream & operator<<(std::wostream &os, const info::Indiv<T, U,S> &d) {
+std::wostream & operator<<(std::wostream &os, const info::Indiv<T, U, S> &d) {
 	return (d.write_to(os));
 }
 ///////////////////////////////////

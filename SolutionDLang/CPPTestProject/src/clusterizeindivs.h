@@ -314,7 +314,7 @@ namespace info {
 				ClusterType *pCluster = c.get();
 				assert(pCluster != nullptr);
 				pCluster->update_center();
-				const IndivTypePtrVector & vv = pCluster->members();
+				auto  vv = pCluster->members();
 				const size_t nn = vv.size();
 				IndexTypeSet oSet;
 				const IndexType key = pCluster->index();

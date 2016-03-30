@@ -78,6 +78,9 @@
     <ClInclude Include="src\booldistance.h">
       <Filter>Header Files\src</Filter>
     </ClInclude>
+    <ClInclude Include="src\elemcrit.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -111,6 +114,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BoolDistanceTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ElemCritTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -14,6 +14,9 @@ namespace info {
 		typedef T DataType;
 		typedef Z DistanceType;
 		//
+		typedef std::valarray<DataType> DataTypeArray;
+		typedef std::vector<DataType> DataTypeVector;
+		//
 		typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
 	public:
 		DistanceFunc() {}
@@ -24,40 +27,40 @@ namespace info {
 		virtual bool is_valid(void) const {
 			return (true);
 		}
-		DistanceType operator()(const std::valarray<DataType> &v1, const std::valarray<DataType> &v2) const {
+		DistanceType operator()(const DataTypeArray &v1, const DataTypeArray &v2) const {
 			return (this->perform_compute(v1, v2));
 		}// operator()
-		DistanceType operator()(const std::vector<DataType> &v1, const std::vector<DataType> &v2) const {
+		DistanceType operator()(const DataTypeVector &v1, const DataTypeVector &v2) const {
 			const size_t n = v1.size();
 			assert(v2.size() == n);
-			std::valarray<DataType> vv1(n);
-			std::valarray<DataType> vv2(n);
+			DataTypeArray vv1(n);
+			DataTypeArray vv2(n);
 			for (size_t i = 0; i < n; ++i) {
 				vv1[i] = v1[i];
 				vv2[i] = v2[i];
 			}
 			return (this->perform_compute(vv1, vv2));
 		}// operator()
-		DistanceType operator()(const std::vector<DataType> &v1, const std::valarray<DataType> &v2) const {
+		DistanceType operator()(const DataTypeVector &v1, const DataTypeArray &v2) const {
 			const size_t n = v1.size();
 			assert(v2.size() == n);
-			std::valarray<DataType> vv1(n);
+			DataTypeArray vv1(n);
 			for (size_t i = 0; i < n; ++i) {
 				vv1[i] = v1[i];
 			}
 			return (this->perform_compute(vv1, v2));
 		}// operator()
-		DistanceType operator()(const std::valarray<DataType> &v1, const std::vector<DataType> &v2) const {
+		DistanceType operator()(const DataTypeArray &v1, const DataTypeVector &v2) const {
 			const size_t n = v1.size();
 			assert(v2.size() == n);
-			std::valarray<DataType> vv2(n);
+			DataTypeArray vv2(n);
 			for (size_t i = 0; i < n; ++i) {
 				vv2[i] = v2[i];
 			}
 			return (this->perform_compute(v1, vv2));
 		}// operator()
 	public:
-		virtual DistanceType perform_compute(const std::valarray<DataType> & v1, const std::valarray<DataType> & v2) const {
+		virtual DistanceType perform_compute(const DataTypeArray & v1, const DataTypeArray & v2) const {
 			const size_t n = v1.size();
 			assert(v2.size() == n);
 			DistanceType res = 0;
@@ -79,17 +82,30 @@ namespace info {
 		typedef Z DistanceType;
 		typedef W WeightType;
 		//
+		typedef std::valarray<DataType> DataTypeArray;
+		typedef std::valarray<WeightType> WeightTypeArray;
+		typedef std::vector<WeightType> WeightTypeVector;
+		//
 		typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
 		typedef WeightedDistanceFunc<DataType, DistanceType, WeightType> WeightedDistanceFuncType;
 	private:
 		const DistanceFuncType &_func;
-		std::valarray<WeightType> _weights;
+		WeightTypeArray _weights;
 	public:
 		WeightedDistanceFunc() {}
 		WeightedDistanceFunc(const DistanceFuncType &func) :
 			_func(func) {}
-		WeightedDistanceFunc(const DistanceFuncType &func, const std::valarray<WeightType> &ww) :
+		WeightedDistanceFunc(const DistanceFuncType &func, const WeightTypeArray &ww) :
 			_func(func), _weights(ww) {}
+		WeightedDistanceFunc(const DistanceFuncType &func, const WeightTypeVector &ww) :
+			_func(func){
+			const size_t n = ww.size();
+			WeightTypeArray &oAr = this->_weights;
+			oAr.resize(n);
+			for (size_t i = 0; i < n; ++i) {
+				oAr[i] = ww[i];
+			}// i
+		}
 		WeightedDistanceFunc(const WeightedDistanceFuncType &other) : DistanceFuncType(other), _func(other._func), _weights(other._weights) {}
 		WeightedDistanceFuncType & operator=(const WeightedDistanceFuncType &other) {
 			if (this != &other) {
@@ -100,6 +116,21 @@ namespace info {
 			return (*this);
 		}
 		virtual ~WeightedDistanceFunc() {}
+	public:
+		const WeightTypeArray &weights(void) const {
+			return (this->_weights);
+		}
+		void weights(const WeightTypeArray &w) {
+			this->_weights = w;
+		}
+		void weights(const WeightTypeVector &w) {
+			const size_t n = w.size();
+			WeightTypeArray &oAr = this->_weights;
+			oAr.resize(n);
+			for (size_t i = 0; i < n; ++i) {
+				oAr[i] = w[i];
+			}// i
+		}
 	public:
 		virtual bool is_valid(void) const {
 			return ((this->_func.is_valid()) && (this->_weights.size() > 0));
@@ -117,6 +148,7 @@ namespace info {
 		typedef T DataType;
 		typedef Z DistanceType;
 		//
+		typedef std::valarray<DataType> DataTypeArray;
 		typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
 		typedef ManhattanDistanceFunc<DataType, DistanceType> ManhattanDistanceFuncType;
 	public:
@@ -130,7 +162,7 @@ namespace info {
 			return (*this);
 		}
 		virtual ~ManhattanDistanceFunc() {}
-		virtual DistanceType perform_compute(const std::valarray<DataType> &v1, const std::valarray<DataType> &v2) const {
+		virtual DistanceType perform_compute(const DataTypeArray &v1, const DataTypeArray &v2) const {
 			const size_t n = v1.size();
 			assert(v2.size() == n);
 			DistanceType res = 0;
@@ -151,6 +183,7 @@ namespace info {
 		typedef T DataType;
 		typedef Z DistanceType;
 		//
+		typedef std::valarray<DataType> DataTypeArray;
 		typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
 		typedef EuclideDistanceFunc<DataType, DistanceFunc> EuclideDistanceFuncType;
 	public:
@@ -164,7 +197,7 @@ namespace info {
 			return (*this);
 		}
 		virtual ~EuclideDistanceFunc() {}
-		virtual DistanceType perform_compute(const std::valarray<DataType> &v1, const std::valarray<DataType> &v2) const {
+		virtual DistanceType perform_compute(const DataTypeArray &v1, const DataTypeArray &v2) const {
 			const size_t n = v1.size();
 			assert(v2.size() == n);
 			assert(n > 0);

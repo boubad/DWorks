@@ -32,6 +32,7 @@ namespace info {
 	public:
 		typedef bool DataType;
 		typedef Z DistanceType;
+		typedef std::valarray<DataType> DataTypeArray;
 		typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
 		typedef IndiceDistanceFunc<DistanceType> IndiceDistanceFuncType;
 	private:
@@ -80,7 +81,7 @@ namespace info {
 			oVec.push_back(IndiceDistanceType::Yule);
 		}//get_all_indice
 	public:
-		virtual DistanceType perform_compute(const std::valarray<DataType> & v1, const std::valarray<DataType> & v2) const {
+		virtual DistanceType perform_compute(const DataTypeArray & v1, const DataTypeArray & v2) const {
 			const size_t nz = v1.size();
 			assert(nz > 0);
 			assert(v2.size() == nz);
@@ -178,7 +179,7 @@ namespace info {
 			return (DistanceType)(dMax - res);
 		}// perform_compute
 	protected:
-		void compute_params(const std::valarray<DataType> &data1, const std::valarray<DataType> &data2,
+		void compute_params(const DataTypeArray &data1, const DataTypeArray &data2,
 			int &n, int &p, int &q, int &c, int &d) const {
 			n = (int)data1.size();
 			assert(n > 0);

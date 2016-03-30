@@ -3,6 +3,7 @@
 #define __INDIVS_H__
 ////////////////////////////////
 #include "indivset.h"
+#include "indiv.h"
 #include "matdata.h"
 #include <map>
 #include <algorithm>
@@ -25,8 +26,6 @@ namespace info {
 		typedef std::vector<IndivTypePtr> IndivTypePtrVector;
 		typedef IndivSet<DataType, IndexType, StringType> ClusterType;
 		typedef std::shared_ptr<ClusterType> ClusterTypePtr;
-		//typedef std::vector<ClusterTypePtr> ClusterTypePtrVector;
-		//typedef std::map<IndexType, IndexType> IndexTypeMap;
 		//
 		typedef Indivs<DataType, IndexType, DistanceType, StringType> IndivsType;
 	private:
