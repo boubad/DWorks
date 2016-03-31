@@ -26,3 +26,5 @@ __dummy.html
 *.opendb
 
 
+/SolutionDLang/UpgradeLog.htm
+/SolutionDLang/SolutionDLang.VC.db
