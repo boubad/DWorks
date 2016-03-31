@@ -21,9 +21,10 @@ namespace info {
 		typedef IndivSet<DataType, IndexType> IndivSetType;
 		typedef std::shared_ptr<IndivSetType> IndivSetTypePtr;
 		typedef std::vector<IndivSetTypePtr> IndivSetTypePtrVector;
+		typedef std::valarray<double>  DoubleTypeArray;
 	private:
 		IndivTypePtrVector _points;
-		std::vector<double> _sum;
+		DoubleTypeArray _sum;
 	public:
 		IndivSet() {}
 		IndivSet(const IndexType aIndex) :IndivType(aIndex) {}
@@ -121,7 +122,7 @@ namespace info {
 			DataTypeArray oAr = p->value();
 			const size_t nx = oAr.size();
 			assert(nx > 0);
-			std::vector<double> &somme = this->_sum;
+			DoubleTypeArray &somme = this->_sum;
 			somme.resize(nx);
 			for (size_t i = 0; i < nx; ++i) {
 				somme[i] = (double)oAr[i];
@@ -362,7 +363,7 @@ namespace info {
 			this->_points.clear();
 		}// reset
 		void update_center(void) {
-			std::vector <double>  &sum = this->_sum;
+			DoubleTypeArray  &sum = this->_sum;
 			const size_t n = sum.size();
 			const size_t nTotal = this->_points.size();
 			if ((n > 0) && (nTotal > 0)) {
@@ -449,7 +450,7 @@ namespace info {
 			const DataTypeArray &v = pIndiv->value();
 			const size_t n = v.size();
 			IndivTypePtrVector &vec = this->_points;
-			std::vector<double> &sum = this->_sum;
+			DoubleTypeArray &sum = this->_sum;
 			if (vec.empty()) {
 				sum.resize(n);
 				for (size_t i = 0; i < n; ++i) {

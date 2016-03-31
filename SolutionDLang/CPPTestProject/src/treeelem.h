@@ -7,6 +7,38 @@
 #include "matdata.h"
 ////////////////////////////////////
 namespace info {
+	///////////////////////////////////////
+#if defined(INFO_STRING_TYPE)
+#define DOT_STRING_1  ("digraph G { ")
+#define DOT_STRING_2  ("size = \"4,4\";")
+#define DOT_STRING_3  (" [")
+#define DOT_STRING_4 ( "] ")
+#define DOT_STRING_5 (" ")
+#define DOT_STRING_6 ( " [shape = box,style=filled,color=yellow, label=\"")
+#define DOT_STRING_7 ("\"];")
+#define DOT_STRING_8 ( "}")
+#define DOT_STRING_9 (" [label=\"S")
+#define DOT_STRING_10 ("\\nVar = ")
+#define DOT_STRING_11 ( "\"];")
+#define DOT_STRING_12 ( " -> ")
+#define DOT_STRING_13 ( ";")
+#define DOT_STRING_14 (" [label=\"ROOT\"];")
+#else
+#define DOT_STRING_1  (L"digraph G { ")
+#define DOT_STRING_2  (L"size = \"4,4\";")
+#define DOT_STRING_3  (L" [")
+#define DOT_STRING_4 ( L"] ")
+#define DOT_STRING_5 (L" ")
+#define DOT_STRING_6 ( L" [shape = box,style=filled,color=yellow, label=\"")
+#define DOT_STRING_7 (L"\"];")
+#define DOT_STRING_8 ( L"}")
+#define DOT_STRING_9 (L" [label=\"S")
+#define DOT_STRING_10 (L"\\nVar = ")
+#define DOT_STRING_11 ( L"\"];")
+#define DOT_STRING_12 ( L" -> ")
+#define DOT_STRING_13 ( L";")
+#define DOT_STRING_14 (L" [label=\"ROOT\"];")
+#endif // INFO_STRING_TYPE
 	//////////////////////////////////////
 	enum class LinkMode { noLink, linkMin, linkMax, linkMean, linkCenter };
 	/////////////////////////////////////
@@ -45,7 +77,7 @@ namespace info {
 			const DistanceType dist = 0,
 			const StringType &sId = StringType(),
 			IndivTypePtr oCenter = IndivTypePtr()
-			) :_index(aIndex), _order(aOrder), _dist(dist), _id(sId), _center(oCenter)
+		) :_index(aIndex), _order(aOrder), _dist(dist), _id(sId), _center(oCenter)
 		{
 		}// TreeElem
 		TreeElem(const TreeElemType &other) :_index(other._index), _order(other._order),
@@ -63,52 +95,47 @@ namespace info {
 		}
 		virtual ~TreeElem() {}
 	public:
-		std::wostream & write_to(std::wostream &os) const {
-			os << L"{" << std::endl;
-			os << L"\tindex: " << this->index() << std::endl;
-			os << L"\tlink order: " << this->order() << std::endl;
-			os << L"\tlink criteria: " << this->linkDistance() << std::endl;
-			if (this->_center.get() != nullptr) {
-				const IndivType *p = this->_center.get();
+		OStreamType & write_to(OStreamType &os) const {
+			os << START_OBJECT << this->index() << STRING_COMMA;
+			os << this->id() << STRING_COMMA;
+			os << this->order() << STRING_COMMA;
+			os << this->linkDistance() << STRING_COMMA;
+			if (this->center().get() != nullptr) {
+				const IndivType *p = this->center().get();
 				assert(p != nullptr);
-				os << L"\tcenter: " << *p << std::endl;
+				os << *p << STRING_COMMA;
 			}
 			const TreeElemTypePtrVector &vv = this->children();
 			const size_t n = vv.size();
-			if (n > 0) {
-				os << L"\tchildren: " << n << L"\t{" << std::endl;
-				for (size_t i = 0; i < n; ++i) {
-					const TreeElemTypePtr &c = vv[i];
-					const TreeElemType *p = c.get();
-					assert(p != nullptr);
-					os << L"\t\t";
-					p->write_to(os);
-				}// i
-				os << L"\t}" << std::endl;
-			}// n
-			os << L"}" << std::endl;
-			return os;
+			for (size_t i = 0; i < n; ++i) {
+				const TreeElemTypePtr &c = vv[i];
+				const TreeElemType *p = c.get();
+				assert(p != nullptr);
+				p->write_to(os);
+			}// i
+			os << END_OBJECT;
+			return (os);
 		}// write_to
-		std::wostream & writeDot(std::wostream &out) const
+		OStreamType & writeDot(OStreamType &out) const
 		{
 			out << std::endl;
-			out << L"digraph G { " << std::endl;
-			out << L"size = \"4,4\";" << std::endl;
+			out << DOT_STRING_1 << std::endl;
+			out << DOT_STRING_2 << std::endl;
 			const TreeElemTypePtrVector &vv = this->children();
 			const size_t n = vv.size();
 			if (n == 0)
 			{
 				IndexType nId = this->index();
 				std::wstringstream os;
-				os << L" [" << nId << L"] ";
+				os << DOT_STRING_3 << nId << DOT_STRING_4;
 				const StringType &ss = this->id();
 				if (!ss.empty())
 				{
-					os << ss << L" ";
+					os << ss << DOT_STRING_5;
 				}
 				std::wstring slabel = os.str();
-				out << nId << L" [shape = box,style=filled,color=yellow, label=\""
-					<< slabel << L"\"];" << std::endl;
+				out << nId << DOT_STRING_6;
+				<< slabel << DOT_STRING_7 << std::endl;
 			}
 			else
 			{
@@ -119,7 +146,7 @@ namespace info {
 					p->internalWriteTo(out);
 				} // i
 			}
-			out << L"}" << std::endl;
+			out << DOT_STRING_8 << std::endl;
 			return (out);
 		} // writeDot
 	public:
@@ -419,7 +446,7 @@ namespace info {
 			cluster.update_center();
 		}// convert_to_clusters
 	public:
-		std::wostream & internalWriteTo(std::wostream &out) const
+		OStreamType & internalWriteTo(OStreamType &out) const
 		{
 			const TreeElemTypePtrVector &vv = this->children();
 			const size_t n = vv.size();
@@ -427,27 +454,27 @@ namespace info {
 			if (n == 0)
 			{
 				std::wstringstream os;
-				os << L" [" << nId << L"] ";
+				os << DOT_STRING_3 << nId << DOT_STRING_4;
 				const StringType & ss = this->id();
 				if (!ss.empty())
 				{
-					os << ss << L" ";
+					os << ss << DOT_STRING_5;
 				}
 				std::wstring slabel = os.str();
-				out << nId << L" [shape = box,style=filled,color=yellow, label=\""
-					<< slabel << L"\"];" << std::endl;
+				out << nId << DOT_STRING_6;
+				out << slabel << DOT_STRING_7 << std::endl;
 			}
 			else
 			{
-				out << nId << L" [label=\"S" << nId << L"\\nVar = "
-					<< this->linkDistance() << L"\"];" << std::endl;
+				out << nId << DOT_STRING_9 << nId << DOT_STRING_10;
+				out << this->linkDistance() << DOT_STRING_11 << std::endl;
 				for (size_t i = 0; i < n; ++i)
 				{
 					const TreeElemTypePtr &pp = vv[i];
 					const TreeElemType *p = pp.get();
 					assert(p != nullptr);
 					p->internalWriteTo(out);
-					out << nId << L" -> " << p->index() << L";" << std::endl;
+					out << nId << DOT_STRING_12 << p->index() << DOT_STRING_13 << std::endl;
 				} // i
 			}
 			return (out);
@@ -501,17 +528,17 @@ namespace info {
 		}
 		virtual ~Tree() {}
 	public:
-		std::wostream & write_to(std::wostream &os) const {
-			os << L"{" << std::endl;
+		OStreamType & write_to(OStreamType &os) const {
+			os << START_OBJECT;
 			const size_t n = this->_elems.size();
-			os << L"\tsize: " << n << std::endl;
+			os << n;
 			for (size_t i = 0; i < n; ++i) {
 				const TreeElemType *p = ((this->_elems)[i]).get();
 				assert(p != nullptr);
-				os << *p << std::endl;
+				os << STRING_COMMA << *p;
 			}// i
-			os << L"}" << std::endl;
-			return os;
+			os << END_OBJECT;
+			return (os);
 		}// write_to
 	public:
 		const size_t size(void) const {
@@ -557,11 +584,11 @@ namespace info {
 				}
 			}// while size
 		}// aggregate
-		std::wostream & writeDot(std::wostream &out) const
+		OStreamType & writeDot(OStreamType &out) const
 		{
 			out << std::endl;
-			out << L"digraph G { " << std::endl;
-			out << L"size = \"4,4\";" << std::endl;
+			out << DOT_STRING_1 << std::endl;
+			out << DOT_STRING_2 << std::endl;
 			const TreeElemTypePtrVector &vv = this->_elems;
 			const size_t n = vv.size();
 			if (n < 1)
@@ -582,16 +609,16 @@ namespace info {
 				}
 			}// i
 			++nId;
-			out << nId << L" [label=\"ROOT\"];" << std::endl;
+			out << nId << DOT_STRING_14 << std::endl;
 			for (size_t i = 0; i < n; ++i)
 			{
 				const TreeElemTypePtr &pp = vv[i];
 				const TreeElemType *p = pp.get();
 				assert(p != nullptr);
 				p->internalWriteTo(out);
-				out << nId << L" -> " << p->index() << L";" << std::endl;
+				out << nId << DOT_STRING_12 << p->index() << DOT_STRING_13 << std::endl;
 			} // i
-			out << L"}" << std::endl;
+			out << DOT_STRING_8 << std::endl;
 			return (out);
 		} // writeDot
 	private:
@@ -704,7 +731,7 @@ namespace info {
 			const IndivsType *pInds = this->_pinds;
 			assert(pInds != nullptr);
 			DistanceFuncType *pFunc = pInds->distance_func();
-			EuclideDistanceFunc<DataType,DistanceType> oDef;
+			EuclideDistanceFunc<DataType, DistanceType> oDef;
 			if (pFunc == nullptr) {
 				pFunc = &oDef;
 			}
@@ -748,9 +775,6 @@ template <typename T, typename U, typename Z>
 info::OStreamType & operator<<(info::OStreamType &os, const info::Tree<T, U, Z> &d) {
 	return d.write_to(os);
 }
-
-/////////////////////////////////
-
 /////////////////////////////////
 #endif // !__TREEELEM_H__
 /////////////////////

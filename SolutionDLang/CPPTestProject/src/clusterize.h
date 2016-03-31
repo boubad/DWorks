@@ -227,31 +227,17 @@ namespace info {
 			}// i
 		}// perform_one_step
 	public:
-		virtual std::ostream & write_to(std::ostream &os) const {
+		virtual OStreamType & write_to(OStreamType &os) const {
 			const ClusterTypeVector &cc = this->_clusters;
 			for (auto it = cc.begin(); it != cc.end(); ++it) {
 				auto c = *it;
 				c.write_to(os);
-				os << "\t" << c.trace() << std::endl;
+				os << STRING_TAB << c.trace() << std::endl;
 			}
 			return (os);
 		}// write_to
-		virtual std::wostream & write_to(std::wostream &os) const {
-			const ClusterTypeVector &cc = this->_clusters;
-			for (auto it = cc.begin(); it != cc.end(); ++it) {
-				auto c = *it;
-				c.write_to(os);
-				os << L"\t" << c.trace() << std::endl;
-			}
-			return (os);
-		}// write_to
-		void toString(std::string &s) const {
-			std::stringstream os;
-			this->write_to(os);
-			s = os.str();
-		}// toString
-		void toString(std::wstring &s) const {
-			std::wstringstream os;
+		void toString(StringType  &s) const {
+			StringStreamType os;
 			this->write_to(os);
 			s = os.str();
 		}// toString
@@ -264,8 +250,8 @@ namespace info {
 	/////////////////////////////////////////////
 }// namespace info
 /////////////////////////////////////
-template <typename T, typename U, class S, typename Z>
-std::wostream & operator<<(std::wostream &os, const info::ClusterManager<T, U, S,Z> &d) {
+template <typename T, typename U,typename Z>
+info::OStreamType & operator<<(info::OStreamType &os, const info::ClusterManager<T, U, Z> &d) {
 	return d.write_to(os);
 }
 /////////////////////////////
