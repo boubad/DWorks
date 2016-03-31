@@ -160,18 +160,12 @@ class Clusterization(T=int,U = int) {
 			assert(nn > 0);
 			auto c0 = _clusters[0];
 			assert(!(c0 is null));
-			T[] vv0 = c0.value;
-			assert(!(vv0 is null));
-			assert(vv0.length == this.col_size);
-			real mindist = fdist(data,vv0);
+			real mindist = fdist(data,c0.data);
 			int minindex = 0;
 			for (int i = 1; i < nn; ++i){
 				auto c = _clusters[i];
 				assert(!(c is null));
-				T[] vv = c.value;
-				assert(!(vv is null));
-				assert(vv.length == this.col_size);
-				real dd = fdist(data,vv);
+				real dd = fdist(data,c.data);
 				if (dd < mindist){
 					mindist = dd;
 					minindex = i;

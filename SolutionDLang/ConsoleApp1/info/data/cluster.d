@@ -114,33 +114,20 @@ private:
 	real[] _sum;
 	ClusterDesc!(U) _desc;
 public:
-	this(){
-		super();
-		_sum = [];
-		_desc = new ClusterDesc!(U);
-	}
-	this(U aIndex){
-		super(aIndex);
-		_sum = [];
-		_desc = new ClusterDesc!(U)(aIndex);
-	}
-	this(U aIndex, const T[] data){
+	this(U aIndex, const T[] data = []){
 		super(aIndex,data);
 		_sum = [];
 		_desc = new ClusterDesc!(U)(aIndex);
 	}
 public:
 	Cluster!(T,U) deepCopy() const {
-		auto r = new Cluster!(T,U)(this.index,this.value);
+		auto r = new Cluster!(T,U)(this.index,this.data);
 		r._sum = _sum.dup;
 		r._desc = _desc.deepCopy();
 		return r;
 	}
 	@property ClusterDesc!(U) desc() 
-	out(result){
-		assert(!(result is null));
-	}
-	body{
+	{
 		return _desc;
 	}
 	@property int count() const 
@@ -153,9 +140,7 @@ public:
 			return _desc.count;
 		}
 		@property U[] members() const 
-		out (result){
-			assert(!(result is null));
-		}body{
+		{
 			return _desc.members;
 		}
 		@property real trace() const
@@ -163,10 +148,9 @@ public:
 			assert(result >= 0);
 		}body{
 			real s = 0;
-			T[] vv = this.value;
-			int n = vv.length;
+			int n = data.length;
 			for (int i = 0; i < n; ++i){
-				real t = vv[i];
+				real t = data[i];
 				s += t * t;
 			}
 			return s;
@@ -188,7 +172,7 @@ public:
 				for (int i = 0; i < nc; ++i){
 					result[i] = cast(T)(_sum[i] / ntotal);
 				}// i
-				this.value(result);
+				this.data = result;
 			}// ntotal
 		}// update_center
 		bool add_array(in U nIndex, in T[] xdata, in bool bUpdate = false)
@@ -228,10 +212,9 @@ public:
 		bool add_indiv(in Indiv!(T,U) other, in bool bUpdate = false) 
 		in {
 			assert(!(other is null));
-			assert(other.is_valid);
 		}
 		body{
-			return this.add_array(other.index, other.value,bUpdate);
+			return this.add_array(other.index, other.data,bUpdate);
 		}// add_indiv
 	public:
 		override bool opEquals(Object o) const {
@@ -259,7 +242,6 @@ public:
 		override string toString() const {
 			immutable n = _desc.count;
 			U[] xdata = _desc.members;
-			T[] data = this.value;
 			auto writer = appender!string();
 			formattedWrite(writer,"{%s, %s, %s, %s}",this.index,data,xdata, this.trace);
 			return writer.data;
@@ -268,10 +250,6 @@ public:
 //////////////////////////////////////
 unittest {
 	////////////////////////////////////////////
-	auto c0 = new Cluster!(int);
-	assert(c0.count == 0);
-	assert(c0.members == []);
-	c0.reset();
 	////////////////////////////////////////////
 	immutable int nIndex = 100;
 	auto c1 = new Cluster!(int)(nIndex);
