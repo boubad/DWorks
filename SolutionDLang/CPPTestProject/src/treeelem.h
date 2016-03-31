@@ -6,33 +6,29 @@
 #include "indivset.h"
 #include "matdata.h"
 ////////////////////////////////////
-#include <map>
-#include <set>
-///////////////////////////////////////
 namespace info {
 	//////////////////////////////////////
 	enum class LinkMode { noLink, linkMin, linkMax, linkMean, linkCenter };
 	/////////////////////////////////////
-	template <typename T = int, typename U = int, typename Z = long, class S = std::wstring>
+	template <typename T = int, typename U = int, typename Z = long>
 	class TreeElem {
 	public:
 		typedef T DataType;
 		typedef U IndexType;
 		typedef Z DistanceType;
-		typedef S StringType;
 		//
 		typedef std::valarray<T> DataTypeArray;
 		typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
-		typedef MatData<DataType, StringType> MatDataType;
-		typedef Indiv<DataType, IndexType, StringType> IndivType;
+		typedef MatData<DataType> MatDataType;
+		typedef Indiv<DataType, IndexType> IndivType;
 		typedef std::shared_ptr<IndivType> IndivTypePtr;
 		typedef std::vector<IndivTypePtr> IndivTypePtrVector;
 		typedef std::map<IndexType, IndexType> IndexTypeMap;
-		typedef IndivSet<DataType, IndexType, StringType> ClusterType;
+		typedef IndivSet<DataType, IndexType> ClusterType;
 		typedef std::vector<IndexType> IndexTypeVector;
 		typedef std::vector<StringType> StringTypeVector;
 		//
-		typedef TreeElem<DataType, IndexType, DistanceType, StringType> TreeElemType;
+		typedef TreeElem<DataType, IndexType, DistanceType> TreeElemType;
 		typedef std::shared_ptr<TreeElemType> TreeElemTypePtr;
 		typedef std::vector<TreeElemTypePtr> TreeElemTypePtrVector;
 	private:
@@ -458,30 +454,29 @@ namespace info {
 		} // internalWriteTo
 	};// class TreeElem<T,U,Z,S>
 	/////////////////////////////////////////
-	template <typename T = int, typename U = int, typename Z = long, class S = std::wstring>
+	template <typename T = int, typename U = int, typename Z = long>
 	class Tree {
 	public:
 		typedef T DataType;
 		typedef U IndexType;
 		typedef Z DistanceType;
-		typedef S StringType;
 		//
 		typedef std::valarray<T> DataTypeArray;
 		typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
-		typedef MatData<DataType, StringType> MatDataType;
-		typedef Indiv<DataType, IndexType, StringType> IndivType;
+		typedef MatData<DataType> MatDataType;
+		typedef Indiv<DataType, IndexType> IndivType;
 		typedef std::shared_ptr<IndivType> IndivTypePtr;
 		typedef std::vector<IndivTypePtr> IndivTypePtrVector;
 		typedef std::map<IndexType, IndexType> IndexTypeMap;
-		typedef IndivSet<DataType, IndexType, StringType> ClusterType;
+		typedef IndivSet<DataType, IndexType> ClusterType;
 		typedef std::vector<IndexType> IndexTypeVector;
 		typedef std::vector<StringType> StringTypeVector;
 		//
-		typedef Indivs<DataType, IndexType, DistanceType, StringType> IndivsType;
-		typedef TreeElem<DataType, IndexType, DistanceType, StringType> TreeElemType;
+		typedef Indivs<DataType, IndexType, DistanceType> IndivsType;
+		typedef TreeElem<DataType, IndexType, DistanceType> TreeElemType;
 		typedef std::shared_ptr<TreeElemType> TreeElemTypePtr;
 		typedef std::vector<TreeElemTypePtr> TreeElemTypePtrVector;
-		typedef Tree<DataType, IndexType, DistanceType, StringType> TreeType;
+		typedef Tree<DataType, IndexType, DistanceType> TreeType;
 	private:
 		const IndivsType *_pinds;
 		LinkMode _link;
@@ -709,6 +704,10 @@ namespace info {
 			const IndivsType *pInds = this->_pinds;
 			assert(pInds != nullptr);
 			DistanceFuncType *pFunc = pInds->distance_func();
+			EuclideDistanceFunc<DataType,DistanceType> oDef;
+			if (pFunc == nullptr) {
+				pFunc = &oDef;
+			}
 			assert(pFunc != nullptr);
 			const LinkMode link = this->_link;
 			assert(link != LinkMode::noLink);
@@ -740,23 +739,16 @@ namespace info {
 	/////////////////////////////////////////////
 }// namespace info
 //////////////////////////////////////
-template <typename T, typename U, typename Z, class S>
-std::wostream & operator<<(std::wostream &os, const info::TreeElem<T, U, Z, S> &d) {
-	return d.write_to(os);
-}
-template <typename T, typename U, typename Z, class S>
-std::ostream & operator<<(std::ostream &os, const info::TreeElem<T, U, Z, S> &d) {
+template <typename T, typename U, typename Z>
+info::OStreamType & operator<<(info::OStreamType &os, const info::TreeElem<T, U, Z> &d) {
 	return d.write_to(os);
 }
 ////////////////////////////////////
-template <typename T, typename U, typename Z, class S>
-std::wostream & operator<<(std::wostream &os, const info::Tree<T, U, Z, S> &d) {
+template <typename T, typename U, typename Z>
+info::OStreamType & operator<<(info::OStreamType &os, const info::Tree<T, U, Z> &d) {
 	return d.write_to(os);
 }
-template <typename T, typename U, typename Z, class S>
-std::ostream & operator<<(std::ostream &os, const info::Tree<T, U, Z, S> &d) {
-	return d.write_to(os);
-}
+
 /////////////////////////////////
 
 /////////////////////////////////

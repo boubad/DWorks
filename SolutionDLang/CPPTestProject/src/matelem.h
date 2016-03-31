@@ -2,12 +2,7 @@
 #ifndef __MATEMEM_H__
 #define  __MATEMEM_H__
 ///////////////////////////////
-#include <cassert>
-#include <memory>
-#include <vector>
-#include <deque>
-#include <set>
-#include <map>
+#include "gendefs.h"
 ////////////////////////////////////
 namespace info {
 	////////////////////////////////////////////

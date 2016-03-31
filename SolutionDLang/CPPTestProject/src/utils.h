@@ -2,32 +2,27 @@
 #ifndef __MYUTILS_H__
 #define __MYUTILS_H__
 /////////////////////////////////
-#include <cassert>
-#include <valarray>
-#include <vector>
-#include <algorithm>
-#include <iostream>
-#include <random>
-#include <chrono>
+#include "gendefs.h"
 ////////////////////////////////////////
 namespace info {
 	////////////////////////////////////////////////
 	template <typename T=int>
-	size_t global_integer_to_binary_string(const T n, std::wstring &sRet) {
+	size_t global_integer_to_binary_string(const T n, StringType &sRet) {
+		static_assert(std::is_integral<T>::value, "T must be integral type");
 		assert(n >= 0);
 		sRet.clear();
 		int nx = (int)n;
 		if (nx == 0) {
-			sRet = L"0";
+			sRet = STRING_ZERO;
 		}
 		else {
 			while (nx > 0) {
 				int r = nx % 2;
 				if (r != 0) {
-					sRet = L"1" + sRet;
+					sRet = STRING_ONE + sRet;
 				}
 				else {
-					sRet = L"0" + sRet;
+					sRet = STRING_ZERO + sRet;
 				}
 				nx = nx / 2;
 			}// nx
@@ -39,6 +34,7 @@ namespace info {
 	bool make_discrete(const std::valarray<T> &data, size_t &nClasses, 
 		std::valarray<T> &limits, std::valarray<U> &vals,
 		const T tMax = 0, const T tMin = 0) {
+		static_assert(std::is_integral<U>::value, "U must be integral type");
 		assert(nClasses > 0);
 		const size_t n = data.size();
 		if (n < 3) {
@@ -117,76 +113,6 @@ namespace info {
 		}// i
 		return (true);
 	}// make_discrete
-	template <typename T, typename U = int>
-	bool make_discrete(const std::vector<T> &data, size_t &nClasses,
-		std::vector<T> &limits, std::vector<U> &vals) {
-		assert(nClasses > 0);
-		const size_t n = data.size();
-		if (n < 3) {
-			return false;
-		}
-		if ((nClasses % 2) == 0) {
-			++nClasses;
-		}
-		assert(n >= nClasses);
-		std::vector<T> temp(n);
-		for (size_t i = 0; i < n; ++i) {
-			temp[i] = data[i];
-		}// i
-		std::sort(temp.begin(), temp.end());
-		const double vMin = (double)temp[0];
-		const double vMax = (double)temp[n - 1];
-		if (vMin >= vMax) {
-			return false;
-		}
-		const size_t n2 = (size_t)(n / 2);
-		double vMed = (double)temp[n2];
-		if ((n % 2) == 0) {
-			vMed = (double)((vMed + temp[(n2 - 1)]) / 2);
-		}
-		assert(vMed >= vMin);
-		assert(vMed <= vMax);
-		const size_t nc = (size_t)(2 * n2 + 1);
-		const double dxMin = (double)((2 * (vMed - vMin)) / nc);
-		const double dxMax = (double)((2 * (vMax - vMed)) / nc);
-		double xMin = vMin;
-		double xMax = vMax;
-		size_t i = 0;
-		size_t j = nClasses;
-		limits.resize(nClasses + 1);
-		while (i < j) {
-			limits[i++] = (T)xMin;
-			limits[j--] = (T)xMax;
-			xMin = xMin + dxMin;
-			xMax = xMax - dxMax;
-		}// while (i < j)
-		vals.resize(n);
-		const size_t nb = limits.size();
-		for (size_t i = 0; i < n; ++i) {
-			const T val = data[i];
-			size_t ipos = 0;
-			if (val <= vMin) {
-				ipos = 0;
-			}
-			else if (val >= vMax) {
-				ipos = (size_t)(nClasses - 1);
-			}
-			else {
-				ipos = 0;
-				for (size_t j = 0; j < nb; ++j) {
-					if (val <= limits[j]) {
-						break;
-					}
-					++ipos;
-				}//j
-			}
-			if (ipos >= nClasses) {
-				ipos = nClasses - 1;
-			}
-			vals[i] = (U)ipos;
-		}// i
-		return (true);
-	}// make_discrete
 	///////////////////////////////////////////
 	template <typename T>
 	void shuffle_vector(std::vector<T> &v) {
@@ -243,19 +169,84 @@ namespace info {
 		}// i
 	}// gener_real_data
 	//////////////////////////////////////
-	template <typename T>
-	std::wostream & write_valarray(std::wostream &os, const std::valarray<T> &oAr) {
+	template <class T, class Z>
+	OStreamType & info_write_pair(OStreamType &os, const std::pair<T, Z> &oPair) {
+		os << LEFT_PAR << oPair.first << STRING_COMMA << oPair.second << RIGHT_PAR;
+		return (os);
+	}//info_write_pair
+	template <class T>
+	OStreamType & info_write_array(OStreamType &os, const std::valarray<T> &oAr) {
+		os << START_ARRAY;
 		const size_t n = oAr.size();
-		os << L"[ ";
 		for (size_t i = 0; i < n; ++i) {
-			if (i > 0) {
-				os << L" ,";
+			if (i != 0) {
+				os << STRING_COMMA;
 			}
 			os << oAr[i];
-		}// i
-		os << L" ]";
+		}
+		os << END_ARRAY;
 		return (os);
-	}// write_valarray
+	}// info_write_array
+	template <class T,class Alloc>
+	OStreamType & info_write_array(OStreamType &os, const std::list<T,Alloc> &oAr) {
+		os << START_ARRAY;
+		for (auto it = oAr.begin(); it != oAr.end(); ++it) {
+			if (it != oAr.begin()) {
+				os << STRING_COMMA;
+			}
+			os << *it;
+		}// it
+		os << END_ARRAY;
+		return (os);
+	}// info_write_array
+	template <class T, class Alloc>
+	OStreamType & info_write_array(OStreamType &os, const std::deque<T,Alloc> &oAr) {
+		os << START_ARRAY;
+		for (auto it = oAr.begin(); it != oAr.end(); ++it) {
+			if (it != oAr.begin()) {
+				os << STRING_COMMA;
+			}
+			os << *it;
+		}// it
+		os << END_ARRAY;
+		return (os);
+	}// info_write_array
+	template <class T, class Alloc>
+	OStreamType & info_write_array(OStreamType &os, const std::vector<T,Alloc> &oAr) {
+		os << START_ARRAY;
+		for (auto it = oAr.begin(); it != oAr.end(); ++it) {
+			if (it != oAr.begin()) {
+				os << STRING_COMMA;
+			}
+			os << *it;
+		}// it
+		os << END_ARRAY;
+		return (os);
+	}// info_write_array
+	template <class T, class Compare, class Alloc>
+	OStreamType & info_write_array(OStreamType &os, const std::set<T,Compare, Alloc> &oAr) {
+		os << START_ARRAY;
+		for (auto it = oAr.begin(); it != oAr.end(); ++it) {
+			if (it != oAr.begin()) {
+				os << STRING_COMMA;
+			}
+			os << *it;
+		}// it
+		os << END_ARRAY;
+		return (os);
+	}// info_write_array
+	template <class Key, class T, class Compare, class Alloc>
+	OStreamType & info_write_array(OStreamType &os, const std::map<Key,T,Compare,Alloc> &oAr) {
+		os << START_ARRAY;
+		for (auto it = oAr.begin(); it != oAr.end(); ++it) {
+			if (it != oAr.begin()) {
+				os << STRING_COMMA;
+			}
+			info_write_pair(os, *it);
+		}// it
+		os << END_ARRAY;
+		return (os);
+	}// info_write_array
 	//////////////////////////////////////////
 }// namespace info
 /////////////////////////////////////

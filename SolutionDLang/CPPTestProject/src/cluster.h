@@ -8,23 +8,23 @@
 //////////////////////////////////////////
 namespace info {
 	///////////////////////////////////
-	template <typename T = int, typename U = int, class S = std::wstring> class Cluster : public Indiv<T, U,S> {
+	template <typename T = int, typename U = int> class Cluster : public Indiv<T, U> {
 	private:
 		std::set<U> _members;
 		std::valarray<double> _sum;
 	public:
 		Cluster() {}
 		Cluster(const U aIndex) :Indiv<T, U,S>(aIndex) {}
-		Cluster(const U aIndex,const S &sid) :Indiv<T, U, S>(aIndex,sid) {}
+		Cluster(const U aIndex,const S &sid) :Indiv<T, U>(aIndex,sid) {}
 		Cluster(const U aIndex, const std::valarray<T> &oCenter) :
-			Indiv<T,U,S>(aIndex, oCenter) {}
+			Indiv<T,U>(aIndex, oCenter) {}
 		Cluster(const U aIndex, const S &sid,const std::valarray<T> &oCenter) :
-			Indiv<T, U,S>(aIndex, sid,oCenter) {}
-		Cluster(const Cluster<T, U,S> &other) :Indiv<T, U,S>(other),
+			Indiv<T, U>(aIndex, sid,oCenter) {}
+		Cluster(const Cluster<T, U> &other) :Indiv<T, U>(other),
 			_members(other._members), _sum(other._sum) {}
-		Cluster<T, U,S> & operator=(const Cluster<T, U,S > &other) {
+		Cluster<T, U> & operator=(const Cluster<T, U > &other) {
 			if (this != &other) {
-				Indiv<T, U,S>::operator=(other);
+				Indiv<T, U>::operator=(other);
 				this->_members = other._members;
 				this->_sum = other._sum;
 			}
@@ -89,27 +89,6 @@ namespace info {
 			}//not contains
 		}// add
 	public:
-		virtual std::ostream & write_to(std::ostream &os) const {
-			os << "{" << this->index() << " ,[";
-			const std::valarray<T> &data = this->value();
-			const size_t n = data.size();
-			for (size_t i = 0; i < n; ++i) {
-				if (i > 0) {
-					os << ", ";
-				}
-				os << data[i];
-			}// i
-			os << "], [";
-			const std::set<U> &oSet = this->_members;
-			for (auto it = oSet.begin(); it != oSet.end(); ++it) {
-				if (it != oSet.begin()) {
-					os << ", ";
-				}
-				os << *it;
-			}// it
-			os << " ] }";
-			return (os);
-		}// write_to
 		virtual std::wostream & write_to(std::wostream &os) const {
 			os << L"{" << this->index() << L" ,[";
 			const std::valarray<T> &data = this->value();
@@ -131,7 +110,7 @@ namespace info {
 			os << L" ] }";
 			return (os);
 		}// write_to
-	};// class Cluster<T,U,S>
+	};// class Cluster<T,U>
 	//////////////////////////////////////
 }// namespace info
 //////////////////////////////////////

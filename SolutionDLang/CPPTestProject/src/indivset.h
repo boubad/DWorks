@@ -2,26 +2,23 @@
 #ifndef __INDIVSET_H__
 #define __INDIVSET_H__
 /////////////////////////////////
-#include <set>
-#include <deque>
-///////////////////////////////////
 #include "indiv.h"
 /////////////////////////////////////////
 enum class DistanceMode { modeInvalid, modeCenter, modeUpUp, modeUpDown, modeDownUp, modeDownDown }; // enum DistanceMode
 /////////////////////////////////////
 namespace info {
 	///////////////////////////////////////
-	template <typename T = int, typename U = int, class S = std::wstring> class IndivSet : public Indiv<T, U, S> {
+	template <typename T = int, typename U = int> class IndivSet : public Indiv<T, U> {
 	public:
 		typedef T DataType;
 		typedef U IndexType;
-		typedef S StringType;
+		//
 		typedef std::valarray<T> DataTypeArray;
 		typedef std::vector<T> DataTypeVector;
-		typedef Indiv<DataType, IndexType, StringType> IndivType;
+		typedef Indiv<DataType, IndexType> IndivType;
 		typedef std::shared_ptr<IndivType> IndivTypePtr;
 		typedef std::deque<IndivTypePtr> IndivTypePtrVector;
-		typedef IndivSet<DataType, IndexType, StringType> IndivSetType;
+		typedef IndivSet<DataType, IndexType> IndivSetType;
 		typedef std::shared_ptr<IndivSetType> IndivSetTypePtr;
 		typedef std::vector<IndivSetTypePtr> IndivSetTypePtrVector;
 	private:
@@ -201,7 +198,7 @@ namespace info {
 			{
 				assert(this->is_valid());
 				assert(other.is_valid());
-				IndivType::distance(this->value(), other.value(), res, pFunc);
+				info_distance(this->value(), other.value(), res, pFunc);
 			}
 			break;
 			case DistanceMode::modeUpUp:
@@ -214,7 +211,7 @@ namespace info {
 				IndivTypePtr o2 = other._points.front();
 				const IndivType *p2 = o2.get();
 				assert(p2 != nullptr);
-				IndivType::distance(p1->value(), p2->value(), res, pFunc);
+				info_distance(p1->value(), p2->value(), res, pFunc);
 			}
 			break;
 			case DistanceMode::modeUpDown:
@@ -227,7 +224,7 @@ namespace info {
 				IndivTypePtr o2 = other._points.back();
 				const IndivType *p2 = o2.get();
 				assert(p2 != nullptr);
-				IndivType::distance(p1->value(), p2->value(), res, pFunc);
+				info_distance(p1->value(), p2->value(), res, pFunc);
 			}
 			break;
 			case DistanceMode::modeDownUp:
@@ -240,7 +237,7 @@ namespace info {
 				IndivTypePtr o2 = other._points.front();
 				const IndivType *p2 = o2.get();
 				assert(p2 != nullptr);
-				IndivType::distance(p1->value(), p2->value(), res, pFunc);
+				info_distance(p1->value(), p2->value(), res, pFunc);
 			}
 			break;
 			case DistanceMode::modeDownDown:
@@ -253,7 +250,7 @@ namespace info {
 				IndivTypePtr o2 = other._points.back();
 				const IndivType *p2 = o2.get();
 				assert(p2 != nullptr);
-				IndivType::distance(p1->value(), p2->value(), res, pFunc);
+				info_distance(p1->value(), p2->value(), res, pFunc);
 			}
 			break;
 			default:
@@ -274,6 +271,7 @@ namespace info {
 	public:
 		template <typename Z>
 		void intra_inertia(Z &dist) const {
+			EuclideDistanceFunc<DataType, double> ofunc;
 			const IndivTypePtrVector &v1 = this->_points;
 			const size_t n = v1.size();
 			const DataTypeArray &oAr0 = this->value();
@@ -283,9 +281,9 @@ namespace info {
 				const IndivType *p1 = oInd1.get();
 				assert(p1 != nullptr);
 				const DataTypeArray &oAr1 = p1->value();
-				DataTypeArray t = oAr1 - oAr0;
-				DataTypeArray tt = t * t;
-				ss += tt.sum();
+				double dd = 0;
+				info_distance(oAr0, oAr1, dd, &ofunc);
+				ss += dd * dd;
 			}// i
 			if (n > 0) {
 				ss = (ss / n);
@@ -294,6 +292,7 @@ namespace info {
 		}// intra_inertia
 		template <typename Z>
 		void intra_variance(Z &dist) const {
+			EuclideDistanceFunc<DataType, double> ofunc;
 			const IndivTypePtrVector &v1 = this->_points;
 			const size_t n = v1.size();
 			size_t count = 0;
@@ -308,9 +307,9 @@ namespace info {
 					const IndivType *p2 = oInd2.get();
 					assert(p2 != nullptr);
 					const DataTypeArray &oAr2 = p2->value();
-					DataTypeArray t = oAr1 - oAr2;
-					DataTypeArray tt = t * t;
-					ss += tt.sum();
+					double dd = 0;
+					info_distance(oAr1, oAr2, dd, &ofunc);
+					ss += dd * dd;
 					++count;
 				}// j
 			}// i
@@ -519,40 +518,27 @@ namespace info {
 			return this->add(oo, bUpdate);
 		}// add
 	public:
-		virtual std::wostream & write_to(std::wostream &os) const {
+		virtual OStreamType & write_to(OStreamType &os) const {
 			double var = 0;
 			double tx = 0;
 			this->intra_inertia(tx);
 			this->intra_variance(var);
-			os << L"{" << std::endl;
-			os << L"\tindex: " << this->index() << std::endl;
-			os << L"\tid: " << std::endl;
-			os << L"\tintra-inertia: " << tx << std::endl;
-			os << L"\ttrace: " << this->trace() << std::endl;
-			os << L"\tintra-variance: " << var << std::endl;
-			os << L"\tcenter: ";
-			IndivType::write_to(os);
-			os << std::endl;
-			os << L"\tmembers: ";
-			auto vv = this->_points;
-			for (auto it = vv.begin(); it != vv.end(); ++it) {
-				os << L"\t\t";
-				IndivTypePtr o = *it;
-				const IndivType *p = o.get();
-				assert(p != nullptr);
-				p->write_to(os);
-				os << std::endl;
-			}// it
-			os << L"}";
-			return os;
+			os << START_OBJECT;
+			os << this->index() << STRING_COMMA << this->id() << STRING_COMMA << tx << STRING_COMMA << this->norm();
+			os << STRING_COMMA << var << STRING_COMMA;
+			info_write_array(os, this->value());
+			os << STRING_COMMA;
+			info_write_array(os, this->_points);
+			os << END_OBJECT;
+			return (os);
 		}// write_to
 
 	}; // class IndivSet<T,U,S>
 	//////////////////////////////////////////
 }// namespace info
 //////////////////////////////////////
-template <typename T, typename U, class S>
-std::wostream & operator<<(std::wostream &os, const info::IndivSet<T, U, S> &d) {
+template <typename T, typename U>
+info::OStreamType & operator<<(info::OStreamType &os, const info::IndivSet<T, U> &d) {
 	return d.write_to(os);
 }
 /////////////////////////////////

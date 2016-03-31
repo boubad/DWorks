@@ -81,6 +81,9 @@
     <ClInclude Include="src\elemcrit.h">
       <Filter>Header Files\src</Filter>
     </ClInclude>
+    <ClInclude Include="src\gendefs.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -118,6 +121,9 @@
     </ClCompile>
     <ClCompile Include="ElemCritTest.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\variable.cpp">
+      <Filter>Header Files\src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

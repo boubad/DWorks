@@ -21,20 +21,20 @@ namespace CPPTestProject
 	typedef std::vector<StringType> StringTypeVector;
 	typedef std::valarray<DataType> DataTypeArray;
 	typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
-	typedef MatData<DataType, StringType> MatDataType;
-	typedef Indiv<DataType, IndexType, StringType> IndivType;
+	typedef MatData<DataType> MatDataType;
+	typedef Indiv<DataType, IndexType> IndivType;
 	typedef std::shared_ptr<IndivType> IndivTypePtr;
 	typedef std::vector<IndivTypePtr> IndivTypePtrVector;
-	typedef IndivSet<DataType, IndexType, StringType> ClusterType;
+	typedef IndivSet<DataType, IndexType> ClusterType;
 	typedef std::shared_ptr<ClusterType> ClusterTypePtr;
 	typedef std::vector<ClusterTypePtr> ClusterTypePtrVector;
 	typedef std::set<IndexType> IndexTypeSet;
 	typedef std::map<IndexType, IndexTypeSet> IndexTypeMap;
 	//
-	typedef Indivs<DataType, IndexType, DistanceType, StringType> IndivsType;
+	typedef Indivs<DataType, IndexType, DistanceType> IndivsType;
 	typedef MatElem<DistanceType> MatElemType;
 	typedef MatElemSort<IndexType, DistanceType> MatElemSortType;
-	typedef IndexedMatData<DataType, IndexType, StringType> IndexedMatDataType;
+	typedef IndexedMatData<DataType, IndexType> IndexedMatDataType;
 	///////////////////////////////////////////
 	TEST_CLASS(UnitTestVariable)
 	{
@@ -46,7 +46,7 @@ namespace CPPTestProject
 			StringType lName(L"TestVariable Long name");
 			StringType desc(L"TestVariable description");
 			const size_t nbModalites = 8;
-			NumVariableDesc<StringType> oDesc(sName, lName, desc);
+			NumVariableDesc oDesc(sName, lName, desc);
 			//
 			Assert::AreEqual(sName, oDesc.shortName());
 			Assert::AreEqual(lName, oDesc.longName());
@@ -73,7 +73,7 @@ namespace CPPTestProject
 			StringType lName(L"TestVariable Long name");
 			StringType desc(L"TestVariable description");
 			const size_t nbModalites = 8;
-			OrdinalVariableDesc<StringType> oDesc(nbModalites, sName,lName, desc);
+			OrdinalVariableDesc oDesc(nbModalites, sName,lName, desc);
 			//
 			Assert::AreEqual(sName, oDesc.shortName());
 			Assert::AreEqual(lName, oDesc.longName());
@@ -110,7 +110,7 @@ namespace CPPTestProject
 			for (auto it = oSet.begin(); it != oSet.end(); ++it) {
 				ovec.push_back(*it);
 			}
-			NominalVariableDesc<StringType> oDesc(sName, oSet, lName, desc);
+			NominalVariableDesc oDesc(sName, oSet, lName, desc);
 			//
 			Assert::AreEqual(sName, oDesc.shortName());
 			Assert::AreEqual(lName, oDesc.longName());
@@ -154,7 +154,7 @@ namespace CPPTestProject
 			StringType sName(L"TestVariable");
 			StringType lName(L"TestVariable Long name");
 			StringType desc(L"TestVariable description");
-			BooleanVariableDesc<StringType> oDesc(sName,lName,desc);
+			BooleanVariableDesc oDesc(sName,lName,desc);
 			//
 			Assert::AreEqual(sName, oDesc.shortName());
 			Assert::AreEqual(lName, oDesc.longName());

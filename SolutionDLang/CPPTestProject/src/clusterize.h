@@ -7,27 +7,20 @@
 #include "cluster.h"
 #include "utils.h"
 /////////////////////////////
-#include <memory>
-#include <set>
-#include <vector>
-#include <map>
-#include <algorithm>
-////////////////////////////////
 namespace info {
 	////////////////////////////////////////////
-	template <typename T = int, typename U = int, class S = std::wstring, typename Z = long> class ClusterManager {
+	template <typename T = int, typename U = int, typename Z = long> class ClusterManager {
 	public:
 		typedef T DataType;
 		typedef U IndexType;
-		typedef S StringType;
 		typedef Z DistanceType;
 		//
 		typedef std::valarray<T> DataTypeArray;
 		typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
 		typedef MatData<DataType> MatDataType;
-		typedef Cluster<DataType, IndexType,StringType> ClusterType;
+		typedef Cluster<DataType, IndexType> ClusterType;
 		typedef std::vector<ClusterType> ClusterTypeVector;
-		typedef ClusterManager<DataType, IndexType, StringType, DistanceType> ClusterManagerType;
+		typedef ClusterManager<DataType, IndexType, DistanceType> ClusterManagerType;
 	private:
 		size_t _nbclusters;
 		DataMode _mode;
@@ -271,10 +264,6 @@ namespace info {
 	/////////////////////////////////////////////
 }// namespace info
 /////////////////////////////////////
-template <typename T, typename U, class S,typename Z>
-std::ostream & operator<<(std::ostream &os, const info::ClusterManager<T, U, S,Z> &d) {
-	return d.write_to(os);
-}
 template <typename T, typename U, class S, typename Z>
 std::wostream & operator<<(std::wostream &os, const info::ClusterManager<T, U, S,Z> &d) {
 	return d.write_to(os);

@@ -5,29 +5,28 @@
 #include "indivset.h"
 #include "indiv.h"
 #include "matdata.h"
-#include <map>
-#include <algorithm>
 ///////////////////////////////////
 namespace info {
 	//////////////////////////////////////
-	template <typename T = int, typename U = int, typename Z = long, class S = std::wstring>
+	template <typename T = int, typename U = int, typename Z = long>
 	class Indivs {
+		static_assert(std::is_integral<U>::value, "index typename must be integral type");
+		static_assert(sizeof(Z) >= sizeof(T), "Distance typename size must be greater or equal Data typename");
 	public:
 		typedef T DataType;
 		typedef U IndexType;
 		typedef Z DistanceType;
-		typedef S StringType;
 		//
 		typedef std::valarray<DataType> DataTypeArray;
 		typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
-		typedef MatData<DataType,StringType> MatDataType;
-		typedef Indiv<DataType, IndexType, StringType> IndivType;
+		typedef MatData<DataType> MatDataType;
+		typedef Indiv<DataType, IndexType> IndivType;
 		typedef std::shared_ptr<IndivType> IndivTypePtr;
 		typedef std::vector<IndivTypePtr> IndivTypePtrVector;
-		typedef IndivSet<DataType, IndexType, StringType> ClusterType;
+		typedef IndivSet<DataType, IndexType> ClusterType;
 		typedef std::shared_ptr<ClusterType> ClusterTypePtr;
 		//
-		typedef Indivs<DataType, IndexType, DistanceType, StringType> IndivsType;
+		typedef Indivs<DataType, IndexType, DistanceType> IndivsType;
 	private:
 		DataMode _mode;
 		MatDataType *_pdata;
@@ -36,10 +35,8 @@ namespace info {
 	public:
 		static const size_t NB_ITER_MAX;
 		static const size_t NB_DEFAULT_CLUSTERS;
-		static std::shared_ptr<EuclideDistanceFunc<DataType, DistanceType> > _st_func;
 	public:
 		Indivs() :_mode(DataMode::noMode), _pdata(nullptr), _pfunc(nullptr) {
-			(void)this->check_distance_func();
 		}
 		Indivs(MatDataType *pData,
 			DataMode m = DataMode::modeRow,
@@ -75,7 +72,7 @@ namespace info {
 		}// set_data
 		bool is_valid(void) const {
 			return ((this->_mode != DataMode::noMode) && (this->_pdata != nullptr) &&
-				(this->_pfunc != nullptr) && (this->_pdata->is_valid()));
+				(this->_pdata->is_valid()));
 		}
 		DataMode mode(void) const {
 			return (this->_mode);
@@ -132,7 +129,6 @@ namespace info {
 		DistanceType distance(const IndivType *pInd1, const IndivType *pInd2) const {
 			assert(pInd1 != nullptr);
 			assert(pInd2 != nullptr);
-			assert(this->_pfunc != nullptr);
 			DistanceType r = 0;
 			pInd1->distance(*pInd2, r, this->_pfunc);
 			return (r);
@@ -209,28 +205,8 @@ namespace info {
 			if (!this->_vec.empty()) {
 				return (true);
 			}
-			if (!this->check_distance_func()) {
-				return (false);
-			}
 			return (this->initialize_indivs());
 		}// checkData
-		bool check_distance_func() {
-			if (this->_pfunc != nullptr) {
-				return (true);
-			}
-			DistanceFuncType *p = _st_func.get();
-			if (p != nullptr) {
-				this->_pfunc = p;
-				return (true);
-			}
-			_st_func.reset(new EuclideDistanceFunc<DataType, DistanceType>());
-			p = _st_func.get();
-			if (p != nullptr) {
-				this->_pfunc = p;
-				return (true);
-			}
-			return (false);
-		}
 		bool initialize_indivs(void) {
 			if (!this->is_valid()) {
 				return (false);
@@ -251,12 +227,10 @@ namespace info {
 		}// initialize_indivs
 	};// class Indivs<T,U,Z,S>
 	//////////////////////////////////
-	template <typename T, typename U, typename Z, class S>
-	const size_t Indivs<T, U, Z, S>::NB_DEFAULT_CLUSTERS = 7;
-	template <typename T, typename U, typename Z, class S>
-	const size_t Indivs<T, U, Z, S>::NB_ITER_MAX = 100;
-	template <typename T, typename U, typename Z, class S>
-	std::shared_ptr<EuclideDistanceFunc<T, Z> > Indivs<T, U, Z, S>::_st_func;
+	template <typename T, typename U, typename Z>
+	const size_t Indivs<T, U, Z>::NB_DEFAULT_CLUSTERS = 5;
+	template <typename T, typename U, typename Z>
+	const size_t Indivs<T, U, Z>::NB_ITER_MAX = 100;
 	//////////////////////////////////////
 }// namespace info
 ////////////////////////////////

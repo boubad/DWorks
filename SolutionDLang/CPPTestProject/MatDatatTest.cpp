@@ -13,7 +13,7 @@ namespace CPPTestProject
 	typedef int DataType;
 	typedef std::wstring StringType;
 	typedef std::valarray<DataType> DataTypeArray;
-	typedef MatData<DataType,StringType> MatDataType;
+	typedef MatData<DataType> MatDataType;
 	typedef std::vector<StringType> StringTypeVector;
 	///////////////////////////////////////////
 	TEST_CLASS(UnitTestMatData)
@@ -43,7 +43,7 @@ namespace CPPTestProject
 				std::valarray<int> v;
 				oMat.row_at(i, v);
 				os << i << L"\t";
-				write_valarray(os, v);
+				info_write_array(os, v);
 				os << std::endl;
 			}// i
 			os << L"COLS" << std::endl;
@@ -51,7 +51,7 @@ namespace CPPTestProject
 				std::valarray<int> v;
 				oMat.col_at(i, v);
 				os << i << L"\t";
-				write_valarray(os, v);
+				info_write_array(os, v);
 				os << std::endl;
 			}// i
 			 ////////////////////////////
@@ -62,7 +62,7 @@ namespace CPPTestProject
 				std::valarray<int> v;
 				oMat.data_at(i, mode, v);
 				os << i << L"\t";
-				write_valarray(os, v);
+				info_write_array(os, v);
 				os << std::endl;
 			}// i
 			os << L"MODE COL" << std::endl;
@@ -72,7 +72,7 @@ namespace CPPTestProject
 				std::valarray<int> v;
 				oMat.data_at(i, mode, v);
 				os << i << L"\t";
-				write_valarray(os, v);
+				info_write_array(os, v);
 				os << std::endl;
 			}// i
 			 /////////////////////

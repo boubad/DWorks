@@ -2,11 +2,7 @@
 #ifndef __RESULTITEM_H__
 #define  __RESULTITEM_H__
 //////////////////////////////
-#include <cassert>
-#include <vector>
-#include <set>
-#include <map>
-#include <algorithm>
+#include "gendefs.h"
 ///////////////////////////////////
 namespace info {
 	///////////////////////////////////////////////

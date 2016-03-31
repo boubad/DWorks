@@ -2,14 +2,12 @@
 #ifndef __DISTANCE_H__
 #define __DISTANCE_H__
 /////////////////////////
-#include <cassert>
-#include <cmath>
-#include <valarray>
-#include <vector>
+#include "gendefs.h"
 /////////////////////////////
 namespace info {
 	//////////////////////////////////////
 	template <typename T = int, typename Z = long> class DistanceFunc {
+		static_assert(sizeof(Z) >= sizeof(T), "Distance typename size must be greater or equal Data typename");
 	public:
 		typedef T DataType;
 		typedef Z DistanceType;
@@ -78,6 +76,8 @@ namespace info {
 	template <typename T = int, typename Z = long, typename W = double> class WeightedDistanceFunc :
 		public DistanceFunc<T, Z> {
 	public:
+		static_assert(std::is_floating_point<W>::value,"Weight typename must be floating point type");
+		//
 		typedef T DataType;
 		typedef Z DistanceType;
 		typedef W WeightType;
@@ -216,6 +216,51 @@ namespace info {
 			return (DistanceType)(t * t);
 		}
 	}; // class EuclideDistanceFunc
+	//////////////////////////////////////////
+	template <typename T, typename Z>
+	void info_distance(const std::valarray<T> &vv1, const std::valarray<T>  &vv2, Z &result,
+		const DistanceFunc<T, Z> *pFunc = nullptr) {
+		if (pFunc == nullptr) {
+			EuclideDistanceFunc<T, Z> f;
+			result = f(vv1, vv2);
+		}
+		else {
+			result = (*pFunc)(vv1, vv2);
+		}
+	}// info_distance
+	template <typename T, typename Z>
+	void info_distance(const std::vector<T> &vv1, const std::vector<T> &vv2, Z &result,
+		const DistanceFunc<T, Z> *pFunc = nullptr) {
+		if (pFunc == nullptr) {
+			EuclideDistanceFunc<T, Z> f;
+			result = f(vv1, vv2);
+		}
+		else {
+			result = (*pFunc)(vv1, vv2);
+		}
+	}// info_distance
+	template <typename T, typename Z>
+	void info_distance(const std::valarray<T> &vv1, const std::vector<T>  &vv2, Z &result,
+		const DistanceFunc<T, Z> *pFunc = nullptr) {
+		if (pFunc == nullptr) {
+			EuclideDistanceFunc<T, Z> f;
+			result = f(vv1, vv2);
+		}
+		else {
+			result = (*pFunc)(vv1, vv2);
+		}
+	}// info_distance
+	template <typename T, typename Z>
+	void info_distance(const std::vector<T> &vv1, const std::valarray<T>  &vv2, Z &result,
+		const DistanceFunc<T, Z> *pFunc = nullptr) {
+		if (pFunc == nullptr) {
+			EuclideDistanceFunc<T, Z> f;
+			result = f(vv1, vv2);
+		}
+		else {
+			result = (*pFunc)(vv1, vv2);
+		}
+	}// info_distance
 	////////////////////////////////////////
 }// namespace info
 //////////////////////////

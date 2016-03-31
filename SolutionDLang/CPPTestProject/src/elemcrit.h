@@ -172,25 +172,24 @@ namespace info {
 		}// add
 	};// class ElemCrits<Z>
 	////////////////////////////////////////
-	template <typename T = int, typename U = int, typename Z = long, class S = std::wstring>
+	template <typename T = int, typename U = int, typename Z = long>
 	class MatArrange {
 	public:
 		typedef T DataType;
 		typedef U IndexType;
 		typedef Z DistanceType;
-		typedef S StringType;
 		//
 		typedef ElemCrit<DistanceType> ElemCritType;
 		typedef ElemCrits<DistanceType> ElemCritsType;
 		typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
-		typedef Indiv<DataType, IndexType, StringType> IndivType;
+		typedef Indiv<DataType, IndexType> IndivType;
 		typedef std::shared_ptr<IndivType> IndivTypePtr;
-		typedef IndivSet<DataType, IndexType, StringType> IndivSetType;
+		typedef IndivSet<DataType, IndexType> IndivSetType;
 		typedef std::shared_ptr<IndivSetType> IndivSetTypePtr;
 		typedef std::vector<IndivSetTypePtr> IndivSetTypePtrVector;
-		typedef Indivs<DataType, IndexType, DistanceType, StringType> IndivsType;
+		typedef Indivs<DataType, IndexType, DistanceType> IndivsType;
 		//
-		typedef MatArrange<DataType, IndexType, DistanceType, StringType> MatArrangeType;
+		typedef MatArrange<DataType, IndexType, DistanceType> MatArrangeType;
 	private:
 		DistanceFuncType *_pfunc;
 		IndivSetTypePtrVector _vec;

@@ -2,29 +2,18 @@
 #ifndef __MATDATA_H__
 #define __MATDATA_H__
 ////////////////////////////////
-#include <cassert>
-#include <valarray>
-#include <vector>
-#include <string>
-#include <iostream>
-#include <sstream>
-#include <algorithm>
-#include <random>
-#include <chrono>
-///////////////////////////////////
 #include "utils.h"
 ///////////////////////////////////
 namespace info {
 	//////////////////////////////////////////
 	enum class DataMode { noMode, modeRow, modeCol };
 	////////////////////////////
-	template <typename T = int, class S = std::wstring> class MatData {
+	template <typename T = int> class MatData {
 	public:
 		typedef T DataType;
-		typedef S StringType;
 		typedef std::vector<StringType> StringTypeVector;
 		typedef std::valarray<T> DataTypeArray;
-		typedef MatData<DataType, StringType> MatDataType;
+		typedef MatData<DataType> MatDataType;
 	private:
 		size_t _rows;
 		size_t _cols;
@@ -267,43 +256,38 @@ namespace info {
 			}// i
 		}// get_random_data
 	public:
-		void toString(std::string &s) const {
-			std::stringstream os;
-			this->write_to(os);
-			s = os.str();
-		}
-		void toString(std::wstring &s) const {
-			std::wstringstream os;
+		void toString(StringType &s) const {
+			StringStreamType os;
 			this->write_to(os);
 			s = os.str();
 		}
 	public:
-		virtual std::wostream & write_to(std::wostream &os) const {
+		virtual OStreamType & write_to(OStreamType &os) const {
 			const size_t nRows = this->rows();
 			const size_t nCols = this->cols();
 			for (size_t i = 0; i < nCols; ++i) {
-				os << L"\t" << this->col_name(i);
+				os << STRING_TAB << this->col_name(i);
 			}// i
 			os << std::endl;
 			for (size_t i = 0; i < nRows; ++i) {
 				os << this->row_name(i);
 				for (size_t j = 0; j < nCols; ++j) {
-					os << L"\t" << this->value_at(i, j);
+					os << STRING_TAB << this->value_at(i, j);
 				}// j
 				os << std::endl;
 			}// i
-			return os;
+			return (os);
 		}// write_to
-	};// class MatData<T,S>
+	};// class MatData<T>
 	//////////////////////////////
-	template <typename T = int, typename U = int, class S = std::wstring> class IndexedMatData : public MatData<T, S> {
+	template <typename T = int, typename U = int> class IndexedMatData : public MatData<T> {
+		static_assert(std::is_integral<U>::value, "index typename must be integral type");
 	public:
 		typedef T DataType;
 		typedef U IndexType;
-		typedef S StringType;
-		typedef MatData<DataType, StringType> MatDataType;
+		typedef MatData<DataType> MatDataType;
 		typedef std::vector<IndexType> IndexTypeVector;
-		typedef IndexedMatData<DataType, IndexType, StringType> IndexedMatDataType;
+		typedef IndexedMatData<DataType, IndexType> IndexedMatDataType;
 	private:
 		const MatDataType *_pmat;
 		IndexTypeVector _rowindex;
@@ -448,46 +432,26 @@ namespace info {
 			}
 		}
 	public:
-		virtual std::wostream & write_to(std::wostream &os) const {
-			os << L"row indexes: [";
-			auto vv = this->rowindex();
-			for (auto it = vv.begin(); it != vv.end(); ++it) {
-				if (it != vv.begin()) {
-					os << L", ";
-				}
-				os << (*it);
-			}
-			os << L" ]" << std::endl;
-			os << L"col indexes: [";
-			auto vx = this->colindex();
-			for (auto it = vx.begin(); it != vx.end(); ++it) {
-				if (it != vx.begin()) {
-					os << L", ";
-				}
-				os << (*it);
-			}
-			os << L" ]" << std::endl;
-			return MatDataType::write_to(os);
+		virtual OStreamType & write_to(OStreamType &os) const {
+			os << START_OBJECT;
+			info_write_array(os, this->rowindex());
+			os << STRING_COMMA;
+			info_write_array(os, this->colindex());
+			os << STRING_COMMA;
+			MatDataType::write_to(os);
+			os << END_OBJECT;
+			return (os);
 		}// write_to
-	};// class IndexedMatData<T,U,S>
+	};// class IndexedMatData<T,U>
 	////////////////////////////////////
 }// namespace info
 /////////////////////////////////////////
-template <typename T, class S>
-std::ostream & operator<<(std::ostream &os, info::MatData<T, S> &d) {
+template <typename T>
+info::OStreamType & operator<<(info::OStreamType &os, info::MatData<T> &d) {
 	return d.write_to(os);
 }
-template <typename T, class S>
-std::wostream & operator<<(std::wostream &os, info::MatData<T, S> &d) {
-	return d.write_to(os);
-}
-///////////////////////////////////
-template <typename T, typename U, class S>
-std::ostream & operator<<(std::ostream &os, info::IndexedMatData<T, U, S> &d) {
-	return d.write_to(os);
-}
-template <typename T, typename U, class S>
-std::wostream & operator<<(std::wostream &os, info::IndexedMatData<T, U, S> &d) {
+template <typename T, typename U>
+info::OStreamType & operator<<(info::OStreamType &os, info::IndexedMatData<T, U> &d) {
 	return d.write_to(os);
 }
 ///////////////////////////////////

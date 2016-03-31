@@ -20,21 +20,21 @@ namespace CPPTestProject
 	typedef std::vector<StringType> StringTypeVector;
 	typedef std::valarray<DataType> DataTypeArray;
 	typedef DistanceFunc<DataType, DistanceType> DistanceFuncType;
-	typedef MatData<DataType, StringType> MatDataType;
-	typedef Indiv<DataType, IndexType, StringType> IndivType;
+	typedef MatData<DataType> MatDataType;
+	typedef Indiv<DataType, IndexType> IndivType;
 	typedef std::shared_ptr<IndivType> IndivTypePtr;
 	typedef std::vector<IndivTypePtr> IndivTypePtrVector;
-	typedef IndivSet<DataType, IndexType, StringType> ClusterType;
+	typedef IndivSet<DataType, IndexType> ClusterType;
 	typedef std::shared_ptr<ClusterType> ClusterTypePtr;
 	typedef std::vector<ClusterTypePtr> ClusterTypePtrVector;
 	typedef std::set<IndexType> IndexTypeSet;
 	typedef std::map<IndexType, IndexTypeSet> IndexTypeMap;
 	//
-	typedef Indivs<DataType, IndexType, DistanceType, StringType> IndivsType;
-	typedef TreeElem<DataType, IndexType, DistanceType, StringType> TreeElemType;
+	typedef Indivs<DataType, IndexType, DistanceType> IndivsType;
+	typedef TreeElem<DataType, IndexType, DistanceType> TreeElemType;
 	typedef std::shared_ptr<TreeElemType> TreeElemTypePtr;
 	typedef std::vector<TreeElemTypePtr> TreeElemTypePtrVector;
-	typedef Tree<DataType, IndexType, DistanceType, StringType> TreeType;
+	typedef Tree<DataType, IndexType, DistanceType> TreeType;
 	typedef std::vector<DistanceType> DistanceTypeVector;
 	typedef std::vector<IndexType> IndexTypeVector;
 	typedef std::vector<IndexTypeVector> IndexTypeArray;
